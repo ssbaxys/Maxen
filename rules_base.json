@@ -5,17 +5,17 @@
                 ".read": "$uid === auth.uid || root.child('users/' + auth.uid + '/root').val() === true",
                 ".write": "$uid === auth.uid || root.child('users/' + auth.uid + '/root').val() === true",
                 "root": {
-                    ".write": false // Only system or secure admin scripts can set root = true
+                    ".write": false
                 }
             }
         },
         "servers": {
-            ".read": "auth != null", // Any authenticated user can read server info for the dashboard
+            ".read": "auth != null",
             "$serverId": {
-                ".write": "root.child('users/' + auth.uid + '/root').val() === true", // Only admins can create/edit root server objects
+                ".write": "root.child('users/' + auth.uid + '/root').val() === true",
                 "users": {
                     "$uid": {
-                        ".write": "$uid === auth.uid" // Allow users to manage their own specific server settings if needed (more rules later)
+                        ".write": "$uid === auth.uid"
                     }
                 }
             }
