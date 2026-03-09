@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Turnstile } from '@turnstile/turnstile-react';
+import { Turnstile } from '@marsidev/react-turnstile';
 import { auth, db } from '../../firebase';
 import {
     createUserWithEmailAndPassword,

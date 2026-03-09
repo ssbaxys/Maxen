@@ -17,7 +17,7 @@
         "react-router-dom": "^6.26.1",
         "recharts": "^2.12.7",
         "zustand": "^4.5.5",
-        "@turnstile/turnstile-react": "^1.1.0",
+        "@marsidev/react-turnstile": "^1.1.0",
         "framer-motion": "^11.3.31",
         "clsx": "^2.1.1",
         "tailwind-merge": "^2.5.2"
