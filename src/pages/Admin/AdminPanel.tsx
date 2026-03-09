@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import {
@@ -72,8 +72,8 @@ const AdminPanel = () => {
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
                                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm ${isActive
-                                            ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                                            : `text-textMuted hover:bg-white/5 hover:text-white ${tab.color || ''}`
+                                        ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                                        : `text-textMuted hover:bg-white/5 hover:text-white ${tab.color || ''}`
                                         }`}
                                 >
                                     <Icon size={18} />

@@ -1,11 +1,9 @@
 import React from 'react';
-import { useLocation } from 'react-router-dom';
 import Header from './Header';
 import { useUIStore } from '../../store/uiStore';
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
     const { colorblindMode } = useUIStore();
-    const location = useLocation();
 
     // Decide sidebar rendering later if needed
 

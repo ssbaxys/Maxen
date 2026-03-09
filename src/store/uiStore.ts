@@ -5,11 +5,11 @@ interface UIState {
     theme: 'dark' | 'light';
     colorblindMode: boolean;
     volume: number;
-    voiceOver: boolean;
+    voiceoverEnabled: boolean;
     setTheme: (theme: 'dark' | 'light') => void;
     setColorblindMode: (enabled: boolean) => void;
     setVolume: (volume: number) => void;
-    setVoiceOver: (enabled: boolean) => void;
+    setVoiceover: (enabled: boolean) => void;
 }
 
 export const useUIStore = create<UIState>()(
@@ -17,15 +17,15 @@ export const useUIStore = create<UIState>()(
         (set) => ({
             theme: 'dark',
             colorblindMode: false,
-            volume: 50,
-            voiceOver: false,
+            volume: 100,
+            voiceoverEnabled: false,
             setTheme: (theme) => set({ theme }),
-            setColorblindMode: (enabled) => set({ colorblindMode: enabled }),
+            setColorblindMode: (colorblindMode) => set({ colorblindMode }),
             setVolume: (volume) => set({ volume }),
-            setVoiceOver: (enabled) => set({ voiceOver: enabled }),
+            setVoiceover: (voiceoverEnabled) => set({ voiceoverEnabled }),
         }),
         {
-            name: 'maxen-ui-store',
+            name: 'maxen-ui-storage',
         }
     )
 );

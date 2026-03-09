@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import {
     Terminal, Folder, Database, Calendar, Users, Archive,
     Globe, Settings, FileText, Download, Play, RotateCcw,
     Square, Skull, Cpu, MemoryStick, Activity
 } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 import { motion } from 'framer-motion';
 
 const mockLogs = [
@@ -63,7 +63,7 @@ const ServerPanel = () => {
             <div className="w-56 flex-shrink-0 hidden md:flex flex-col gap-2 relative">
                 <div className="glass-panel p-4 rounded-3xl sticky top-24">
                     <div className="mb-6 px-2">
-                        <h1 className="text-xl font-bold text-white truncate" title={`Server ${id}`}>Survival SMP</h1>
+                        <h1 className="text-xl font-bold text-white truncate" title={`Server ${id} `}>Survival SMP</h1>
                         <p className="text-xs text-textMuted font-mono bg-surface inline-block px-2 py-1 rounded mt-1">{id}</p>
                     </div>
                     <nav className="flex flex-col gap-1">
@@ -71,10 +71,10 @@ const ServerPanel = () => {
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
-                                className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-medium text-sm ${activeTab === tab.id
+                                className={`flex items - center gap - 3 px - 4 py - 2.5 rounded - xl transition - all font - medium text - sm ${activeTab === tab.id
                                         ? 'bg-primary text-white shadow-lg shadow-primary/20'
                                         : 'text-textMuted hover:bg-white/5 hover:text-white'
-                                    }`}
+                                    } `}
                             >
                                 <tab.icon size={16} />
                                 {tab.label}
@@ -93,8 +93,8 @@ const ServerPanel = () => {
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-xl whitespace-nowrap text-sm font-medium transition-all ${activeTab === tab.id ? 'bg-primary text-white' : 'glass-panel text-textMuted'
-                                }`}
+                            className={`flex items - center gap - 2 px - 4 py - 2 rounded - xl whitespace - nowrap text - sm font - medium transition - all ${activeTab === tab.id ? 'bg-primary text-white' : 'glass-panel text-textMuted'
+                                } `}
                         >
                             <tab.icon size={16} />
                             {tab.label}
