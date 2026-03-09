@@ -6,10 +6,12 @@ interface UIState {
     colorblindMode: boolean;
     volume: number;
     voiceoverEnabled: boolean;
+    language: 'en' | 'ru';
     setTheme: (theme: 'dark' | 'light') => void;
     setColorblindMode: (enabled: boolean) => void;
     setVolume: (volume: number) => void;
     setVoiceover: (enabled: boolean) => void;
+    setLanguage: (lang: 'en' | 'ru') => void;
 }
 
 export const useUIStore = create<UIState>()(
@@ -19,10 +21,12 @@ export const useUIStore = create<UIState>()(
             colorblindMode: false,
             volume: 100,
             voiceoverEnabled: false,
+            language: 'en',
             setTheme: (theme) => set({ theme }),
             setColorblindMode: (colorblindMode) => set({ colorblindMode }),
             setVolume: (volume) => set({ volume }),
             setVoiceover: (voiceoverEnabled) => set({ voiceoverEnabled }),
+            setLanguage: (language) => set({ language }),
         }),
         {
             name: 'maxen-ui-storage',

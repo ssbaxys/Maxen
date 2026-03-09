@@ -7,10 +7,12 @@ import { useAuthStore } from '../../store/authStore';
 import { useUIStore } from '../../store/uiStore';
 import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 const Header = () => {
+    const { t, i18n } = useTranslation();
     const { user, visualNick, isRoot } = useAuthStore();
-    const { volume, setVolume, colorblindMode, setColorblindMode } = useUIStore();
+    const { volume, setVolume, colorblindMode, setColorblindMode, language, setLanguage } = useUIStore();
     const navigate = useNavigate();
     const [menuOpen, setMenuOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
@@ -32,7 +34,9 @@ const Header = () => {
     };
 
     const shortId = user?.uid.substring(0, 5) || '00000';
+    const uidLength = user?.uid.length || 0;
     const displayNick = visualNick || user?.email?.split('@')[0] || 'User';
+    const { voiceoverEnabled, setVoiceover } = useUIStore();
 
     return (
         <header className="sticky top-0 z-50 glass-panel border-b border-white/5 py-4 px-6 md:px-12 flex items-center justify-between">
@@ -51,10 +55,12 @@ const Header = () => {
                             className="flex items-center gap-3 hover:bg-white/5 px-3 py-2 rounded-lg transition-colors cursor-pointer"
                         >
                             <div className="flex flex-col items-end hidden md:flex">
-                                <span className="text-sm font-medium">{displayNick}</span>
-                                <span className="text-xs text-textMuted font-mono">#{shortId}</span>
+                                <div className="flex items-baseline gap-1">
+                                    <span className="text-sm font-bold text-white">{displayNick}</span>
+                                    <span className="text-xs text-textMuted font-mono">({shortId})#{user.uid.substring(uidLength - 5)}</span>
+                                </div>
                             </div>
-                            <div className="w-9 h-9 rounded-full bg-surface border border-white/10 flex items-center justify-center overflow-hidden">
+                            <div className="w-10 h-10 rounded-full bg-surface border border-white/10 flex items-center justify-center overflow-hidden shadow-md">
                                 <User size={18} className="text-textMuted" />
                             </div>
                         </button>
@@ -93,13 +99,29 @@ const Header = () => {
                                                 <input type="range" min="0" max="100" value={volume} onChange={(e) => setVolume(Number(e.target.value))} className="w-24 accent-primary" />
                                             </div>
 
-                                            <label className="flex items-center justify-between text-sm cursor-pointer group">
+                                            <label className="flex items-center justify-between text-sm cursor-pointer group mb-3">
                                                 <div className="flex items-center gap-2 text-textMuted group-hover:text-white transition-colors"><Eye size={16} /> Colorblind</div>
                                                 <div className={clsx("w-8 h-4 rounded-full transition-colors relative", colorblindMode ? "bg-primary" : "bg-white/10")}>
                                                     <div className={clsx("absolute top-0.5 left-0.5 w-3 h-3 rounded-full bg-white transition-transform", colorblindMode ? "translate-x-4" : "")} />
                                                 </div>
                                                 <input type="checkbox" className="sr-only" checked={colorblindMode} onChange={(e) => setColorblindMode(e.target.checked)} />
                                             </label>
+
+                                            <label className="flex items-center justify-between text-sm cursor-pointer group">
+                                                <div className="flex items-center gap-2 text-textMuted group-hover:text-white transition-colors"><Volume2 size={16} /> Voiceover</div>
+                                                <div className={clsx("w-8 h-4 rounded-full transition-colors relative", voiceoverEnabled ? "bg-primary" : "bg-white/10")}>
+                                                    <div className={clsx("absolute top-0.5 left-0.5 w-3 h-3 rounded-full bg-white transition-transform", voiceoverEnabled ? "translate-x-4" : "")} />
+                                                </div>
+                                                <input type="checkbox" className="sr-only" checked={voiceoverEnabled} onChange={(e) => setVoiceover(e.target.checked)} />
+                                            </label>
+
+                                            <div className="flex items-center justify-between text-sm mt-3 pt-3 border-t border-white/5">
+                                                <div className="flex items-center gap-2 text-textMuted">Language</div>
+                                                <div className="flex bg-white/5 rounded-lg p-0.5">
+                                                    <button onClick={() => { setLanguage('en'); i18n.changeLanguage('en'); }} className={clsx("px-2 py-1 text-xs rounded-md transition-all", language === 'en' ? "bg-white/10 text-white font-medium" : "text-textMuted hover:text-white")}>EN</button>
+                                                    <button onClick={() => { setLanguage('ru'); i18n.changeLanguage('ru'); }} className={clsx("px-2 py-1 text-xs rounded-md transition-all", language === 'ru' ? "bg-white/10 text-white font-medium" : "text-textMuted hover:text-white")}>RU</button>
+                                                </div>
+                                            </div>
                                         </div>
 
                                     </div>

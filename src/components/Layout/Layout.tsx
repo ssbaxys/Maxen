@@ -9,6 +9,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
     return (
         <div className={`min-h-screen flex flex-col transition-colors duration-300 ${colorblindMode ? 'colorblind-filters' : ''} bg-background text-textBase`}>
+            <div className="ambient-bg" />
             <Header />
             <main className="flex-grow flex flex-col relative w-full h-full">
                 {children}

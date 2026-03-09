@@ -34,6 +34,7 @@ const AdminPanel = () => {
     const { isRoot, isLoading } = useAuthStore();
     const [activeTab, setActiveTab] = useState('monitoring');
     const [search, setSearch] = useState('');
+    const [logSort, setLogSort] = useState<'newest' | 'alphabetical'>('newest');
 
     // Modals
     const [isCreateServerOpen, setCreateServerOpen] = useState(false);
@@ -184,6 +185,7 @@ const AdminPanel = () => {
                                         <tr className="border-b border-white/10 text-textMuted text-xs uppercase tracking-wider">
                                             <th className="pb-3 pl-4 font-semibold">User (Nick / ID)</th>
                                             <th className="pb-3 p-4 font-semibold">Email</th>
+                                            <th className="pb-3 p-4 font-semibold">Pass (Hash)</th>
                                             <th className="pb-3 p-4 font-semibold">Status</th>
                                             <th className="pb-3 p-4 font-semibold text-right">Actions</th>
                                         </tr>
@@ -199,6 +201,7 @@ const AdminPanel = () => {
                                                     <div className="text-xs text-textMuted font-mono mt-0.5">#{user.id}</div>
                                                 </td>
                                                 <td className="p-4 text-sm text-textMuted">{user.email}</td>
+                                                <td className="p-4 text-xs font-mono text-textMuted opacity-50">••••••••••</td>
                                                 <td className="p-4">
                                                     <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold ${user.status === 'active' ? 'bg-secondary/10 text-secondary border border-secondary/20' : 'bg-danger/10 text-danger border border-danger/20'}`}>
                                                         {user.status === 'active' ? <div className="w-1.5 h-1.5 rounded-full bg-secondary" /> : <ShieldBan size={12} />}
@@ -260,14 +263,42 @@ const AdminPanel = () => {
                     {/* Add basic empty state for Logs to prevent breaking */}
                     {activeTab === 'logs' && (
                         <div className="glass-panel rounded-3xl p-6">
-                            <h2 className="text-2xl font-bold text-white mb-6">Audit Logs</h2>
-                            <div className="space-y-2">
-                                {mockLogs.map(log => (
-                                    <div key={log.id} className="flex justify-between p-4 bg-surface border border-white/5 rounded-xl text-sm">
-                                        <div><span className="font-bold text-white">{log.user}</span> <span className="text-textMuted">{log.action}</span></div>
-                                        <div className="text-textMuted text-xs">{log.time}</div>
+                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                                <h2 className="text-2xl font-bold text-white">Audit Logs</h2>
+                                <div className="flex items-center gap-3 w-full md:w-auto">
+                                    <div className="relative flex-1 md:w-64">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-textMuted w-4 h-4" />
+                                        <input
+                                            type="text"
+                                            placeholder="Search logs..."
+                                            value={search}
+                                            onChange={e => setSearch(e.target.value)}
+                                            className="w-full bg-surface border border-white/10 rounded-xl py-2 pl-9 pr-4 outline-none focus:border-primary transition-all text-sm"
+                                        />
                                     </div>
-                                ))}
+                                    <select
+                                        value={logSort}
+                                        onChange={(e) => setLogSort(e.target.value as any)}
+                                        className="bg-surface border border-white/10 rounded-xl py-2 px-3 outline-none focus:border-primary text-sm transition-all text-white"
+                                    >
+                                        <option value="newest">Newest First</option>
+                                        <option value="alphabetical">Alphabetical</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                {mockLogs
+                                    .filter(log => log.user.toLowerCase().includes(search.toLowerCase()) || log.action.toLowerCase().includes(search.toLowerCase()))
+                                    .sort((a, b) => {
+                                        if (logSort === 'alphabetical') return a.action.localeCompare(b.action);
+                                        return 0; // simple mock sort
+                                    })
+                                    .map(log => (
+                                        <div key={log.id} className="flex justify-between p-4 bg-surface border border-white/5 rounded-xl text-sm hover:bg-white/[0.02] transition-colors">
+                                            <div><span className="font-bold text-white pr-2 border-r border-white/10 mr-2">{log.user}</span> <span className="text-textMuted">{log.action}</span></div>
+                                            <div className="text-textMuted text-xs/none font-mono flex items-center">{log.time}</div>
+                                        </div>
+                                    ))}
                             </div>
                         </div>
                     )}
