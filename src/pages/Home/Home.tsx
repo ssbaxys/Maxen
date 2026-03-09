@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Server, Zap, Shield, ChevronRight, Cpu, HardDrive, Globe } from 'lucide-react';
+import { Server, Shield, ChevronRight, Cpu, HardDrive, Globe } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const Home = () => {

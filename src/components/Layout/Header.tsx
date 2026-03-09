@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 
 const Header = () => {
-    const { t, i18n } = useTranslation();
+    const { i18n } = useTranslation();
     const { user, visualNick, isRoot } = useAuthStore();
     const { volume, setVolume, colorblindMode, setColorblindMode, language, setLanguage } = useUIStore();
     const navigate = useNavigate();

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
     Terminal, Folder, Database, Calendar, Users, Archive,
-    Globe, Settings, FileText, Download, Play, RotateCcw,
+    Globe, Settings, Download, Play, RotateCcw,
     Square, Skull, Cpu, MemoryStick, Activity, ShieldAlert
 } from 'lucide-react';
 import { AreaChart, Area, ResponsiveContainer } from 'recharts';
