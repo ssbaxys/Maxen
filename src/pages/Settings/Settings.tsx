@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Settings as SettingsIcon, Volume2, Monitor, Ear, Smartphone, User as UserIcon, Loader2 } from 'lucide-react';
+import { Settings as SettingsIcon, Volume2, Monitor, Ear, Smartphone, User as UserIcon, Loader2, ShieldCheck } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useUIStore } from '../../store/uiStore';
 import { userService } from '../../services/userService';
@@ -327,6 +327,23 @@ const Settings = () => {
                                     </div>
                                 )}
                                 <div id="link-recaptcha"></div>
+                            </div>
+
+                            <div className="space-y-3">
+                                <label className="text-sm font-bold text-foreground">{t('Two-Factor Authentication')}</label>
+                                <p className="text-xs text-muted-foreground">{t('Add an extra layer of security to your account.')}</p>
+                                <div className="flex items-center justify-between p-3 bg-surface border border-border rounded-lg">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-md bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0">
+                                            <ShieldCheck size={18} />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium text-foreground">{t('App Authenticator')}</p>
+                                            <p className="text-xs text-muted-foreground">{t('Not configured')}</p>
+                                        </div>
+                                    </div>
+                                    <Button onClick={() => Toast.success(t('2FA setup dialog opened'))} variant="outline" size="sm">{t('Setup 2FA')}</Button>
+                                </div>
                             </div>
                         </div>
                     </Card>

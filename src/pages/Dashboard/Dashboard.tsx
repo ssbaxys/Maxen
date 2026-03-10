@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Server, Activity, Search, Filter, MoreVertical, Terminal, Plus, X, Loader2 } from 'lucide-react';
+import { Server, Activity, Search, Filter, MoreVertical, Terminal, Plus, X, Loader2, Copy, Trash2 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { serverService } from '../../services/serverService';
 import { userService } from '../../services/userService';
@@ -10,6 +10,7 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { Spinner } from '../../components/ui/Spinner';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
+import { Dropdown } from '../../components/ui/Dropdown';
 import { cn } from '../../lib/utils';
 import Toast from '../../components/ui/Toast';
 import { useTranslation } from 'react-i18next';
@@ -21,6 +22,7 @@ const Dashboard = () => {
     const [serversData, setServersData] = useState<Record<string, ServerData>>({});
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
+    const [filterStatus, setFilterStatus] = useState('all');
 
     // Create server modal
     const [isCreateOpen, setCreateOpen] = useState(false);
@@ -105,10 +107,11 @@ const Dashboard = () => {
     };
 
     const serversList = Object.entries(serversData).map(([id, data]) => ({ id, ...data }));
-    const filteredServers = serversList.filter(s =>
-        s.name.toLowerCase().includes(search.toLowerCase()) ||
-        s.id.toLowerCase().includes(search.toLowerCase())
-    );
+    const filteredServers = serversList.filter(s => {
+        const matchesSearch = s.name.toLowerCase().includes(search.toLowerCase()) || s.id.toLowerCase().includes(search.toLowerCase());
+        const matchesStatus = filterStatus === 'all' || s.status === filterStatus;
+        return matchesSearch && matchesStatus;
+    });
 
     return (
         <div className="flex-1 w-full max-w-7xl mx-auto h-full flex flex-col pt-2">
@@ -126,9 +129,19 @@ const Dashboard = () => {
                         onChange={e => setSearch(e.target.value)}
                         className="w-full md:w-64 h-9"
                     />
-                    <Button variant="outline" size="icon" className="h-9 w-9" title="Filter" onClick={() => Toast.success('Filter toggled')}>
-                        <Filter size={16} />
-                    </Button>
+                    <Dropdown
+                        align="right"
+                        trigger={
+                            <Button variant="outline" size="icon" className={cn("h-9 w-9 shrink-0", filterStatus !== 'all' && "border-primary text-primary hover:text-primary")} title="Filter servers">
+                                <Filter size={16} />
+                            </Button>
+                        }
+                        items={[
+                            { label: 'All Servers', onClick: () => setFilterStatus('all') },
+                            { label: 'Running', onClick: () => setFilterStatus('running') },
+                            { label: 'Offline', onClick: () => setFilterStatus('offline') }
+                        ]}
+                    />
                     <Button onClick={() => setCreateOpen(true)} className="h-9 gap-2 shrink-0">
                         <Plus size={16} /> {t('Create Server')}
                     </Button>
@@ -183,9 +196,21 @@ const Dashboard = () => {
                                                 </div>
                                             </div>
 
-                                            <button className="text-muted-foreground hover:text-foreground p-1 transition-colors rounded hover:bg-surface-hover" aria-label="Server Options" onClick={(e) => e.preventDefault()}>
-                                                <MoreVertical size={16} />
-                                            </button>
+                                            <div onClick={e => e.preventDefault()}>
+                                                <Dropdown
+                                                    align="right"
+                                                    trigger={
+                                                        <button className="text-muted-foreground hover:text-foreground p-1 transition-colors rounded hover:bg-surface-hover" aria-label="Server Options">
+                                                            <MoreVertical size={16} />
+                                                        </button>
+                                                    }
+                                                    items={[
+                                                        { label: 'Manage Server', icon: <Terminal size={14} />, onClick: () => window.location.href = `/servers/${server.id}` },
+                                                        { label: 'Copy ID', icon: <Copy size={14} />, onClick: () => { navigator.clipboard.writeText(server.id); Toast.success('Server ID copied'); } },
+                                                        { label: 'Delete Instance', icon: <Trash2 size={14} />, destructive: true, onClick: () => { if (window.confirm('Delete this server? This cannot be undone.')) Toast.error('Simulation: Server deleted'); } }
+                                                    ]}
+                                                />
+                                            </div>
                                         </div>
 
                                         <div className="grid grid-cols-3 gap-2 mb-5 flex-1">

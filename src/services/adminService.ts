@@ -49,6 +49,11 @@ export const adminService = {
         return dbService.remove(`users/${uid}`);
     },
 
+    // Admin server update
+    updateServer: async (serverId: string, data: Partial<ServerData>) => {
+        return dbService.update(`servers/${serverId}`, data);
+    },
+
     // Admin server deletion
     deleteServer: async (serverId: string) => {
         return dbService.remove(`servers/${serverId}`);

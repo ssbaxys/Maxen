@@ -5,7 +5,7 @@ import {
     Terminal, Folder, Database, Calendar, Users, Archive,
     Globe, Settings, Download, Play, RotateCcw,
     Square, Skull, Cpu, MemoryStick, Activity, ShieldAlert,
-    File, Plus, Trash2, Edit2, Lock, Clock
+    File, Plus, Trash2, Edit2, Lock, Clock, X, FilePlus, FolderPlus, Type
 } from 'lucide-react';
 import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -73,34 +73,26 @@ const ServerPanel = () => {
     const [wipeServer, setWipeServer] = useState(false);
     const [consoleInput, setConsoleInput] = useState("");
     const [serverNameInput, setServerNameInput] = useState("");
-    const [allocations, setAllocations] = useState<any[]>([
-        { ip: '192.168.1.100', port: 25565, isDefault: true, alias: 'play.maxen.gg' },
-        { ip: '192.168.1.100', port: 25566, isDefault: false, alias: '' },
-    ]);
-    const [databases, setDatabases] = useState<any[]>([
-        { name: 'main_db', host: 'db2.hoxen.one', username: 'u482_db', size: '14.2 MB' },
-    ]);
+    const [allocations, setAllocations] = useState<any[]>([]);
+    const [databases, setDatabases] = useState<any[]>([]);
     const [files, setFiles] = useState<any[]>([
-        { name: 'plugins', type: 'folder', size: '—', date: '2025-12-01' },
-        { name: 'world', type: 'folder', size: '—', date: '2025-12-15' },
-        { name: 'logs', type: 'folder', size: '—', date: '2026-01-10' },
-        { name: 'server.jar', type: 'file', size: '42.1 MB', date: '2026-02-20' },
-        { name: 'server.properties', type: 'file', size: '1.2 KB', date: '2026-03-01' },
-        { name: 'bukkit.yml', type: 'file', size: '3.4 KB', date: '2026-01-05' },
-        { name: 'spigot.yml', type: 'file', size: '2.8 KB', date: '2026-01-05' },
-        { name: 'eula.txt', type: 'file', size: '0.1 KB', date: '2025-11-20' },
+        { name: 'server.jar', type: 'file', size: '42.1 MB', date: new Date().toISOString().split('T')[0] },
+        { name: 'server.properties', type: 'file', size: '1.2 KB', date: new Date().toISOString().split('T')[0] },
+        { name: 'eula.txt', type: 'file', size: '0.1 KB', date: new Date().toISOString().split('T')[0] },
     ]);
-    const [schedules, setSchedules] = useState<any[]>([
-        { name: 'Auto Restart', cron: '0 */6 * * *', next: 'In 2 hours' },
-        { name: 'Daily Backup', cron: '0 4 * * *', next: 'Tomorrow 04:00' },
-    ]);
-    const [users, setUsers] = useState<any[]>([
-        { email: 'admin@maxen.gg', perms: ['control.console', 'control.start', 'control.stop'], '2fa': true },
-        { email: 'builder@maxen.gg', perms: ['file.read', 'file.write'], '2fa': false },
-    ]);
-    const [backups, setBackups] = useState<any[]>([
-        { name: 'backup-2026-03-10', size: '128 MB', date: 'Mar 10, 2026 04:00 AM', status: 'Completed' },
-    ]);
+    const [schedules, setSchedules] = useState<any[]>([]);
+    const [users, setUsers] = useState<any[]>([]);
+    const [backups, setBackups] = useState<any[]>([]);
+
+    // File manager modals
+    const [fileModal, setFileModal] = useState<{ type: 'create-file' | 'create-folder' | 'rename' | 'edit' | null, target?: any }>({ type: null });
+    const [fileModalInput, setFileModalInput] = useState('');
+    const [fileEditContent, setFileEditContent] = useState('');
+
+    // Schedule creation modal
+    const [scheduleModal, setScheduleModal] = useState(false);
+    const [schedName, setSchedName] = useState('');
+    const [schedCron, setSchedCron] = useState('');
 
     // Refs for simulation intervals
     const simulatorRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -318,7 +310,7 @@ const ServerPanel = () => {
         return `Build ${build} [stable]`;
     };
 
-    return (
+    const content = (
         <div className="flex-1 flex flex-col w-full max-w-7xl mx-auto px-4 md:px-0 py-6 h-full gap-6">
 
             {/* Header Area */}
@@ -776,9 +768,9 @@ const ServerPanel = () => {
                                 <p className="text-xs text-muted-foreground font-mono bg-background border border-border py-1 px-2 rounded-md inline-block">/home/container</p>
                             </div>
                             <div className="flex gap-2 w-full md:w-auto">
-                                <Button variant="outline" size="sm" className="flex-1 md:flex-none">New File</Button>
-                                <Button variant="outline" size="sm" className="flex-1 md:flex-none">New Folder</Button>
-                                <Button size="sm" className="flex-1 md:flex-none">Upload</Button>
+                                <Button variant="outline" size="sm" className="flex-1 md:flex-none gap-1" onClick={() => { setFileModal({ type: 'create-file' }); setFileModalInput(''); }}><FilePlus size={14} /> New File</Button>
+                                <Button variant="outline" size="sm" className="flex-1 md:flex-none gap-1" onClick={() => { setFileModal({ type: 'create-folder' }); setFileModalInput(''); }}><FolderPlus size={14} /> New Folder</Button>
+                                <Button size="sm" className="flex-1 md:flex-none" onClick={() => toast.success('Upload dialog opened')}>Upload</Button>
                             </div>
                         </div>
                         <div className="overflow-x-auto border border-border rounded-lg bg-background">
@@ -798,19 +790,23 @@ const ServerPanel = () => {
                                         </tr>
                                     ) : files.map((f, i) => (
                                         <tr key={i} className="border-b border-border hover:bg-surface transition-colors group">
-                                            <td className="p-3 px-4 flex items-center gap-3">
+                                            <td className="p-3 px-4 flex items-center gap-3 cursor-pointer" onClick={() => f.type === 'folder' ? toast(`Opened folder: ${f.name}`, { icon: '📂' }) : (() => { setFileModal({ type: 'edit', target: f }); setFileEditContent(`# ${f.name}\n\n// File content simulation\n// Edit this text and click Save`); })()}>
                                                 {f.type === 'folder' ? <Folder size={16} className="text-blue-500" /> : <File size={16} className="text-muted-foreground" />}
-                                                <span className="font-medium text-foreground hover:text-primary transition-colors cursor-pointer">{f.name}</span>
+                                                <span className="font-medium text-foreground hover:text-primary transition-colors">{f.name}</span>
                                             </td>
                                             <td className="p-3 px-4 text-muted-foreground">{f.size}</td>
                                             <td className="p-3 px-4 text-muted-foreground hidden md:table-cell">{f.date}</td>
                                             <td className="p-3 px-4 text-right">
                                                 <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <Button variant="ghost" size="icon" onClick={() => toast.success(`Editing ${f.name}`)} className="h-8 w-8"><Edit2 size={14} /></Button>
-                                                    <Button variant="ghost" size="icon" onClick={() => {
-                                                        setFiles(prev => prev.filter(x => x.name !== f.name));
-                                                        toast.success(`Deleted ${f.name}`);
-                                                    }} className="h-8 w-8 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10"><Trash2 size={14} /></Button>
+                                                    <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); setFileModal({ type: 'rename', target: f }); setFileModalInput(f.name); }} className="h-8 w-8" title="Rename"><Type size={14} /></Button>
+                                                    {f.type === 'file' && <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); setFileModal({ type: 'edit', target: f }); setFileEditContent(`# ${f.name}\n\n// File content simulation\n// Edit this text and click Save`); }} className="h-8 w-8" title="Edit"><Edit2 size={14} /></Button>}
+                                                    <Button variant="ghost" size="icon" onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        if (window.confirm(`Delete "${f.name}"? This cannot be undone.`)) {
+                                                            setFiles(prev => prev.filter(x => x.name !== f.name));
+                                                            toast.success(`Deleted ${f.name}`);
+                                                        }
+                                                    }} className="h-8 w-8 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10" title="Delete"><Trash2 size={14} /></Button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -884,7 +880,7 @@ const ServerPanel = () => {
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-surface border border-border shadow-sm p-6 rounded-lg">
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-xl font-bold text-foreground">Schedules & Cron</h2>
-                            <Button size="sm" onClick={() => toast('Schedule creation modal opened', { icon: '📝' })} className="gap-2">
+                            <Button size="sm" onClick={() => { setScheduleModal(true); setSchedName(''); setSchedCron(''); }} className="gap-2">
                                 <Plus size={16} /> Create Schedule
                             </Button>
                         </div>
@@ -1078,6 +1074,122 @@ const ServerPanel = () => {
 
             </div>
         </div>
+    );
+
+    // Modals rendered via portal-style at the end
+    const modals = (
+        <AnimatePresence>
+            {fileModal.type && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setFileModal({ type: null })}>
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="bg-background w-full max-w-lg rounded-lg border border-border shadow-2xl overflow-hidden"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <div className="flex justify-between items-center p-5 border-b border-border bg-surface">
+                            <h3 className="text-lg font-bold text-foreground">
+                                {fileModal.type === 'create-file' && 'Create New File'}
+                                {fileModal.type === 'create-folder' && 'Create New Folder'}
+                                {fileModal.type === 'rename' && `Rename: ${fileModal.target?.name}`}
+                                {fileModal.type === 'edit' && `Edit: ${fileModal.target?.name}`}
+                            </h3>
+                            <button onClick={() => setFileModal({ type: null })} className="text-muted-foreground hover:text-foreground transition-colors"><X size={18} /></button>
+                        </div>
+                        <div className="p-5 space-y-4">
+                            {(fileModal.type === 'create-file' || fileModal.type === 'create-folder' || fileModal.type === 'rename') && (
+                                <>
+                                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">Name</label>
+                                    <input
+                                        type="text" value={fileModalInput} onChange={e => setFileModalInput(e.target.value)}
+                                        placeholder={fileModal.type === 'create-folder' ? 'folder_name' : 'filename.txt'}
+                                        className="w-full bg-surface border border-border rounded-lg py-2.5 px-4 outline-none focus:border-primary text-foreground text-sm font-mono"
+                                        autoFocus
+                                    />
+                                    <div className="flex gap-3 pt-2">
+                                        <Button variant="outline" className="flex-1" onClick={() => setFileModal({ type: null })}>Cancel</Button>
+                                        <Button className="flex-[2]" disabled={!fileModalInput.trim()} onClick={() => {
+                                            if (fileModal.type === 'rename' && fileModal.target) {
+                                                setFiles(prev => prev.map(f => f.name === fileModal.target.name ? { ...f, name: fileModalInput.trim() } : f));
+                                                toast.success(`Renamed to ${fileModalInput.trim()}`);
+                                            } else {
+                                                const newF = { name: fileModalInput.trim(), type: fileModal.type === 'create-folder' ? 'folder' : 'file', size: fileModal.type === 'create-folder' ? '—' : '0 B', date: new Date().toISOString().split('T')[0] };
+                                                setFiles(prev => [...prev, newF]);
+                                                toast.success(`Created ${newF.name}`);
+                                            }
+                                            setFileModal({ type: null });
+                                        }}>
+                                            {fileModal.type === 'rename' ? 'Rename' : 'Create'}
+                                        </Button>
+                                    </div>
+                                </>
+                            )}
+                            {fileModal.type === 'edit' && (
+                                <>
+                                    <textarea
+                                        value={fileEditContent}
+                                        onChange={e => setFileEditContent(e.target.value)}
+                                        className="w-full bg-surface border border-border rounded-lg py-3 px-4 outline-none focus:border-primary text-foreground text-sm font-mono min-h-[300px] resize-y"
+                                        spellCheck={false}
+                                    />
+                                    <div className="flex gap-3 pt-2">
+                                        <Button variant="outline" className="flex-1" onClick={() => setFileModal({ type: null })}>Cancel</Button>
+                                        <Button className="flex-[2]" onClick={() => {
+                                            toast.success(`Saved ${fileModal.target?.name}`);
+                                            setFileModal({ type: null });
+                                        }}>Save Changes</Button>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </motion.div>
+                </div>
+            )}
+
+            {scheduleModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setScheduleModal(false)}>
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="bg-background w-full max-w-md rounded-lg border border-border shadow-2xl overflow-hidden"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <div className="flex justify-between items-center p-5 border-b border-border bg-surface">
+                            <h3 className="text-lg font-bold text-foreground">Create Schedule</h3>
+                            <button onClick={() => setScheduleModal(false)} className="text-muted-foreground hover:text-foreground transition-colors"><X size={18} /></button>
+                        </div>
+                        <div className="p-5 space-y-4">
+                            <div>
+                                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-2">Schedule Name</label>
+                                <input type="text" value={schedName} onChange={e => setSchedName(e.target.value)} placeholder="e.g. Auto Restart" className="w-full bg-surface border border-border rounded-lg py-2.5 px-4 outline-none focus:border-primary text-foreground text-sm" autoFocus />
+                            </div>
+                            <div>
+                                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-2">Cron Expression</label>
+                                <input type="text" value={schedCron} onChange={e => setSchedCron(e.target.value)} placeholder="0 */6 * * *" className="w-full bg-surface border border-border rounded-lg py-2.5 px-4 outline-none focus:border-primary text-foreground text-sm font-mono" />
+                                <p className="text-xs text-muted-foreground mt-1">Format: minute hour day month weekday</p>
+                            </div>
+                            <div className="flex gap-3 pt-2">
+                                <Button variant="outline" className="flex-1" onClick={() => setScheduleModal(false)}>Cancel</Button>
+                                <Button className="flex-[2]" disabled={!schedName.trim() || !schedCron.trim()} onClick={() => {
+                                    setSchedules(prev => [...prev, { name: schedName.trim(), cron: schedCron.trim(), next: 'Pending...' }]);
+                                    toast.success(`Schedule "${schedName}" created`);
+                                    setScheduleModal(false);
+                                }}>Create Schedule</Button>
+                            </div>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
+        </AnimatePresence>
+    );
+
+    return (
+        <>
+            {content}
+            {modals}
+        </>
     );
 };
 

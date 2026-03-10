@@ -5,8 +5,9 @@ import { adminService } from '../../services/adminService';
 import { UserData, ServerData, AdminLog, BanData } from '../../types/firebase';
 import {
     Activity, Users, FileText, Server, AlertTriangle,
-    Search, ShieldBan, Trash2, Plus, X, Power, Skull, Clock
+    Search, ShieldBan, Trash2, Plus, X, Power, Skull, Clock, MoreVertical, Edit2
 } from 'lucide-react';
+import { Dropdown } from '../../components/ui/Dropdown';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '../../components/ui/Card';
@@ -36,6 +37,16 @@ const AdminPanel = () => {
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
     const [banDuration, setBanDuration] = useState('1h');
     const [blockedFeatures, setBlockedFeatures] = useState<string[]>([]);
+
+    // Edit Server Modal State
+    const [isEditServerOpen, setEditServerOpen] = useState(false);
+    const [editServerId, setEditServerId] = useState('');
+    const [editServerName, setEditServerName] = useState('');
+    const [editServerRam, setEditServerRam] = useState<number>(0);
+    const [editServerCpu, setEditServerCpu] = useState<number>(0);
+    const [editServerDisk, setEditServerDisk] = useState<number>(0);
+    const [editServerDbs, setEditServerDbs] = useState<number>(0);
+    const [editServerStatus, setEditServerStatus] = useState<string>('offline');
 
     useEffect(() => {
         if (!isRoot) return;
@@ -384,6 +395,7 @@ const AdminPanel = () => {
                                             <th className="pb-3 p-4 font-semibold">Owner ID</th>
                                             <th className="pb-3 p-4 font-semibold">Specs</th>
                                             <th className="pb-3 p-4 font-semibold">Status</th>
+                                            <th className="pb-3 p-4 font-semibold text-right"></th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -401,6 +413,35 @@ const AdminPanel = () => {
                                                     <Badge variant={server.status === 'running' ? 'success' : server.status === 'offline' ? 'danger' : 'secondary'} className="uppercase">
                                                         {server.status}
                                                     </Badge>
+                                                </td>
+                                                <td className="p-4 text-right">
+                                                    <Dropdown
+                                                        align="right"
+                                                        trigger={<button className="text-muted-foreground hover:text-foreground p-1 transition-colors rounded hover:bg-surface-hover"><MoreVertical size={16} /></button>}
+                                                        items={[
+                                                            {
+                                                                label: 'Edit Server', icon: <Edit2 size={14} />, onClick: () => {
+                                                                    setEditServerId(server.id);
+                                                                    setEditServerName(server.name);
+                                                                    setEditServerRam(server.specs.ram);
+                                                                    setEditServerCpu(server.specs.cpu);
+                                                                    setEditServerDisk(server.specs.disk);
+                                                                    setEditServerDbs((server.specs as any).databases || 0);
+                                                                    setEditServerStatus(server.status || 'offline');
+                                                                    setEditServerOpen(true);
+                                                                }
+                                                            },
+                                                            {
+                                                                label: 'Delete Server', icon: <Trash2 size={14} />, destructive: true, onClick: async () => {
+                                                                    if (window.confirm(`Delete ${server.name} globally? This is irreversible.`)) {
+                                                                        await adminService.deleteServer(server.id);
+                                                                        Toast.success('Server deleted');
+                                                                        adminService.createLog({ user: 'System Admin', action: 'DELETED_SERVER', target: server.id, type: 'server', timestamp: Date.now() });
+                                                                    }
+                                                                }
+                                                            }
+                                                        ]}
+                                                    />
                                                 </td>
                                             </tr>
                                         ))}
@@ -610,6 +651,78 @@ const AdminPanel = () => {
                                 <div className="pt-4 flex gap-3">
                                     <Button variant="outline" className="flex-1" onClick={() => setCreateServerOpen(false)}>Cancel</Button>
                                     <Button className="flex-[2] gap-2" onClick={() => Toast.success("Server creation queued.")}><Plus size={16} /> Provision Instance</Button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+
+                {isEditServerOpen && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setEditServerOpen(false)}>
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="bg-background w-full max-w-lg rounded-lg border border-border shadow-2xl overflow-hidden flex flex-col"
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <div className="flex justify-between items-center p-6 border-b border-border bg-surface">
+                                <h3 className="text-xl font-bold text-foreground">Edit Server Configuration</h3>
+                                <button onClick={() => setEditServerOpen(false)} className="text-muted-foreground hover:text-foreground transition-colors"><X size={20} /></button>
+                            </div>
+                            <div className="p-6 space-y-4">
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-2">Display Name</label>
+                                        <input type="text" value={editServerName} onChange={e => setEditServerName(e.target.value)} className="w-full bg-surface border border-border rounded-lg py-3 px-4 outline-none focus:border-primary text-foreground text-sm" />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-2">Memory (GB)</label>
+                                            <input type="number" step="0.1" value={editServerRam} onChange={e => setEditServerRam(Number(e.target.value))} className="w-full bg-surface border border-border rounded-lg py-3 px-4 outline-none focus:border-primary text-foreground text-sm" />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-2">CPU Cores</label>
+                                            <input type="number" step="0.1" value={editServerCpu} onChange={e => setEditServerCpu(Number(e.target.value))} className="w-full bg-surface border border-border rounded-lg py-3 px-4 outline-none focus:border-primary text-foreground text-sm" />
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-2">Storage (GB)</label>
+                                            <input type="number" step="1" value={editServerDisk} onChange={e => setEditServerDisk(Number(e.target.value))} className="w-full bg-surface border border-border rounded-lg py-3 px-4 outline-none focus:border-primary text-foreground text-sm" />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-2">Max Databases</label>
+                                            <input type="number" step="1" value={editServerDbs} onChange={e => setEditServerDbs(Number(e.target.value))} className="w-full bg-surface border border-border rounded-lg py-3 px-4 outline-none focus:border-primary text-foreground text-sm" />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-2">Server Status</label>
+                                        <select value={editServerStatus} onChange={e => setEditServerStatus(e.target.value)} className="w-full bg-surface border border-border rounded-lg py-3 px-4 text-foreground outline-none focus:border-primary transition-colors cursor-pointer appearance-none">
+                                            <option value="running">Running</option>
+                                            <option value="offline">Offline</option>
+                                            <option value="suspended">Suspended</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="pt-2 flex gap-3">
+                                    <Button variant="outline" className="flex-1" onClick={() => setEditServerOpen(false)}>Cancel</Button>
+                                    <Button className="flex-[2] gap-2" onClick={async () => {
+                                        await adminService.updateServer(editServerId, {
+                                            name: editServerName,
+                                            status: editServerStatus as any,
+                                            specs: {
+                                                ram: editServerRam,
+                                                cpu: editServerCpu,
+                                                disk: editServerDisk,
+                                                databases: editServerDbs
+                                            } as any
+                                        });
+                                        Toast.success("Server configuration updated.");
+                                        adminService.createLog({ user: 'System Admin', action: 'UPDATED_SERVER', target: editServerId, type: 'server', timestamp: Date.now() });
+                                        setEditServerOpen(false);
+                                    }}><Edit2 size={16} /> Save Changes</Button>
                                 </div>
                             </div>
                         </motion.div>
