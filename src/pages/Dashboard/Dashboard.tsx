@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Server, Activity, Search, Filter } from 'lucide-react';
+import { Server, Activity, Search, Filter, MoreVertical, Terminal } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { serverService } from '../../services/serverService';
 import { userService } from '../../services/userService';
@@ -8,7 +8,6 @@ import { ServerData } from '../../types/firebase';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Spinner } from '../../components/ui/Spinner';
-import { Card } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { cn } from '../../lib/utils';
@@ -21,10 +20,8 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
 
-    // Fetch user's server list first
     useEffect(() => {
         if (!user) return;
-
         const unsubscribeUser = userService.subscribeToUser(user.uid, (userData) => {
             if (userData && userData.servers) {
                 setServerIds(Object.keys(userData.servers));
@@ -33,25 +30,20 @@ const Dashboard = () => {
             }
             setLoading(false);
         });
-
         return () => unsubscribeUser();
     }, [user]);
 
-    // Fetch live data for each server the user has access to
     useEffect(() => {
         if (serverIds.length === 0) {
             setServersData({});
             return;
         }
-
         const unsubscribes: Array<() => void> = [];
-
         serverIds.forEach(id => {
             const unsub = serverService.subscribeToServer(id, (data) => {
                 if (data) {
                     setServersData(prev => ({ ...prev, [id]: data }));
                 } else {
-                    // Server deleted
                     setServersData(prev => {
                         const next = { ...prev };
                         delete next[id];
@@ -61,7 +53,6 @@ const Dashboard = () => {
             });
             unsubscribes.push(unsub);
         });
-
         return () => {
             unsubscribes.forEach(unsub => unsub());
         };
@@ -74,108 +65,106 @@ const Dashboard = () => {
     );
 
     return (
-        <div className="flex-1 w-full max-w-7xl mx-auto h-full flex flex-col">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 pb-6 border-b border-border">
+        <div className="flex-1 w-full max-w-7xl mx-auto h-full flex flex-col pt-2">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 pb-0">
                 <div>
-                    <h1 className="text-3xl font-bold text-foreground mb-1">Dashboard</h1>
-                    <p className="text-muted-foreground text-sm">Manage and monitor your running instances</p>
+                    <h1 className="text-2xl font-bold tracking-tight text-foreground mb-1">Servers</h1>
+                    <p className="text-muted-foreground text-sm">Manage and monitor your infrastructure</p>
                 </div>
 
                 <div className="flex items-center gap-3 w-full md:w-auto">
                     <Input
-                        icon={<Search size={18} />}
+                        icon={<Search size={16} />}
                         placeholder="Search servers..."
                         value={search}
                         onChange={e => setSearch(e.target.value)}
-                        className="w-full md:w-64 lg:w-80"
+                        className="w-full md:w-64 h-9"
                     />
-                    <Button variant="outline" size="icon" title="Filter" onClick={() => Toast.promise(new Promise(resolve => setTimeout(resolve, 1000)), { loading: 'Applying filter...', success: 'Filter applied', error: 'Error' })}>
-                        <Filter size={18} />
+                    <Button variant="outline" size="icon" className="h-9 w-9" title="Filter" onClick={() => Toast.promise(new Promise(resolve => setTimeout(resolve, 1000)), { loading: 'Applying filter...', success: 'Filter applied', error: 'Error' })}>
+                        <Filter size={16} />
                     </Button>
                 </div>
             </div>
 
             {loading ? (
                 <div className="flex-1 flex flex-col items-center justify-center">
-                    <Spinner size="lg" className="text-primary mb-4" />
-                    <p className="text-sm font-medium text-muted-foreground animate-pulse">Synchronizing cluster...</p>
+                    <Spinner size="md" className="text-foreground mb-4" />
+                    <p className="text-xs font-mono text-muted-foreground animate-pulse">Syncing nodes...</p>
                 </div>
             ) : serverIds.length === 0 ? (
-                <div className="flex-1 flex flex-col items-center justify-center">
+                <div className="flex-1 flex flex-col items-center justify-center mt-12 bg-surface/50 border border-border rounded-lg border-dashed p-12">
                     <EmptyState
-                        icon={<Server />}
-                        title="No servers found"
-                        description="You don't currently have any active servers assigned to your account. Deploy a new instance to get started."
-                        actionLabel="Deploy Server"
-                        actionHref="/register" // Assuming deployment flow might begin here or store
+                        icon={<Server size={24} />}
+                        title="No instances found"
+                        description="You don't currently have any active servers assigned to your account."
+                        actionLabel="Deploy Instance"
+                        actionHref="/register"
                     />
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 auto-rows-max">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 auto-rows-max">
                     <AnimatePresence>
                         {filteredServers.map((server, index) => (
                             <motion.div
                                 key={server.id}
                                 layout
-                                initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.95 }}
-                                transition={{ delay: index * 0.05, duration: 0.2 }}
+                                initial={{ opacity: 0, y: 5 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.98 }}
+                                transition={{ delay: index * 0.03, duration: 0.15 }}
                             >
-                                <Link to={`/servers/${server.id}`} className="block h-full group">
-                                    <Card className="p-6 h-full flex flex-col hover:border-primary/40 transition-all hover:shadow-glass-lg relative overflow-hidden">
+                                <Link to={`/servers/${server.id}`} className="block h-full outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg">
+                                    <div className="bg-surface border border-border rounded-lg p-5 h-full flex flex-col hover:border-border-hover transition-colors shadow-sm cursor-pointer group">
 
-                                        {/* Status Glow Blob */}
-                                        <div className={cn(
-                                            "absolute -right-12 -top-12 w-32 h-32 blur-[60px] rounded-full transition-colors duration-700 opacity-20 group-hover:opacity-40",
-                                            server.status === 'running' ? 'bg-secondary' :
-                                                server.status === 'starting' || server.status === 'stopping' ? 'bg-accent' : 'bg-danger'
-                                        )} />
-
-                                        <div className="flex justify-between items-start mb-6 relative z-10">
+                                        <div className="flex justify-between items-start mb-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="relative flex h-3 w-3">
-                                                    {server.status === 'running' && (
-                                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
-                                                    )}
-                                                    <span className={cn(
-                                                        "relative inline-flex rounded-full h-3 w-3 transition-colors",
-                                                        server.status === 'running' ? 'bg-secondary' :
-                                                            server.status === 'starting' || server.status === 'stopping' ? 'bg-accent' : 'bg-danger'
-                                                    )}></span>
+                                                <div className="w-10 h-10 rounded border border-border bg-background flex items-center justify-center shrink-0 shadow-sm">
+                                                    <Server size={18} className="text-foreground group-hover:text-primary transition-colors" />
                                                 </div>
                                                 <div>
-                                                    <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">{server.name}</h3>
-                                                    <p className="text-xs text-muted-foreground font-mono">{server.node}</p>
+                                                    <div className="flex items-center gap-2 mb-0.5">
+                                                        <h3 className="text-sm font-semibold text-foreground tracking-tight">{server.name}</h3>
+                                                        <div className={cn(
+                                                            "w-2 h-2 rounded-full",
+                                                            server.status === 'running' ? 'bg-emerald-500' :
+                                                                server.status === 'starting' || server.status === 'stopping' ? 'bg-amber-500 animate-pulse' : 'bg-rose-500'
+                                                        )} />
+                                                    </div>
+                                                    <p className="text-xs text-muted-foreground font-mono">{server.id.substring(0, 8)}</p>
                                                 </div>
                                             </div>
-                                            <Server className="text-muted-foreground group-hover:text-foreground transition-colors" size={20} />
+
+                                            <button className="text-muted-foreground hover:text-foreground p-1 transition-colors rounded hover:bg-surface-hover" aria-label="Server Options" onClick={(e) => e.preventDefault()}>
+                                                <MoreVertical size={16} />
+                                            </button>
                                         </div>
 
-                                        <div className="grid grid-cols-3 gap-3 relative z-10 mb-6 flex-1">
-                                            <div className="bg-surface p-3 rounded-xl border border-border">
-                                                <p className="text-[10px] text-muted-foreground mb-1 font-bold uppercase tracking-wider">Storage</p>
-                                                <p className="text-sm font-semibold text-foreground">{server.specs?.disk || 0}GB</p>
+                                        <div className="grid grid-cols-3 gap-2 mb-5 flex-1">
+                                            <div className="bg-background rounded-md p-2 border border-border flex flex-col gap-1 items-center justify-center text-center">
+                                                <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">Mem</p>
+                                                <p className="text-xs font-mono text-foreground">{server.specs?.ram || 0}GB</p>
                                             </div>
-                                            <div className="bg-surface p-3 rounded-xl border border-border">
-                                                <p className="text-[10px] text-muted-foreground mb-1 font-bold uppercase tracking-wider">Memory</p>
-                                                <p className="text-sm font-semibold text-foreground">{server.specs?.ram || 0}GB</p>
+                                            <div className="bg-background rounded-md p-2 border border-border flex flex-col gap-1 items-center justify-center text-center">
+                                                <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">CPU</p>
+                                                <p className="text-xs font-mono text-foreground">{server.specs?.cpu || 0}C</p>
                                             </div>
-                                            <div className="bg-surface p-3 rounded-xl border border-border">
-                                                <p className="text-[10px] text-muted-foreground mb-1 font-bold uppercase tracking-wider">CPU</p>
-                                                <p className="text-sm font-semibold text-foreground">{server.specs?.cpu || 0}C</p>
+                                            <div className="bg-background rounded-md p-2 border border-border flex flex-col gap-1 items-center justify-center text-center">
+                                                <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">Disk</p>
+                                                <p className="text-xs font-mono text-foreground">{server.specs?.disk || 0}GB</p>
                                             </div>
                                         </div>
 
-                                        <div className="flex items-center justify-between text-xs text-muted-foreground border-t border-border pt-4 relative z-10">
-                                            <span className="font-mono bg-surface px-2 py-1 rounded-md border border-border group-hover:border-primary/20 transition-colors">
-                                                id: {server.id.substring(0, 8)}...
-                                            </span>
-                                            <div className="flex items-center gap-1 group-hover:text-primary transition-colors font-medium">
-                                                Open Console <Activity size={14} className="ml-1" />
+                                        <div className="flex items-center justify-between mt-auto">
+                                            <div className="flex items-center gap-1.5 px-2 py-1 bg-surface-hover rounded text-xs font-mono text-muted-foreground border border-transparent group-hover:border-border transition-colors">
+                                                <Activity size={12} className={cn(server.status === 'running' ? 'text-emerald-500' : 'text-muted-foreground')} />
+                                                {server.node}
+                                            </div>
+
+                                            <div className="text-xs font-medium flex items-center gap-1 text-muted-foreground group-hover:text-foreground transition-colors">
+                                                <Terminal size={14} /> Open
                                             </div>
                                         </div>
-                                    </Card>
+                                    </div>
                                 </Link>
                             </motion.div>
                         ))}

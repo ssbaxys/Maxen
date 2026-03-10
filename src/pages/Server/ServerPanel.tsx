@@ -12,6 +12,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../../store/authStore';
 import { serverService } from '../../services/serverService';
 import { ServerData } from '../../types/firebase';
+import { cn } from '../../lib/utils';
+import { Button } from '../../components/ui/Button';
+import { Input } from '../../components/ui/Input';
 
 const STARTUP_SEQUENCE = [
     "[SERVER THREAD/INFO]: Starting maxen-host dedicated server instance...",
@@ -294,170 +297,204 @@ const ServerPanel = () => {
     };
 
     return (
-        <div className="flex-1 flex flex-col md:flex-row w-full max-w-[1400px] mx-auto px-4 md:px-8 py-8 h-full gap-8">
+        <div className="flex-1 flex flex-col w-full max-w-7xl mx-auto px-4 md:px-0 py-6 h-full gap-6">
 
-            {/* Sidebar Desktop */}
-            <div className="w-56 flex-shrink-0 hidden md:flex flex-col gap-2 relative">
-                <div className="bg-surface border border-border shadow-sm p-4 rounded-3xl sticky top-24">
-                    <div className="mb-6 px-2">
-                        <Link to="/dashboard" className="text-xs text-textMuted hover:text-white transition-colors block mb-4">← Back to Servers</Link>
-                        {isLoading ? (
-                            <div className="animate-pulse space-y-2">
-                                <div className="h-6 bg-white/10 rounded w-3/4"></div>
-                                <div className="h-4 bg-white/5 rounded w-1/2"></div>
+            {/* Header Area */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 pb-4 border-b border-border">
+                <div className="flex flex-col gap-1">
+                    <Link to="/dashboard" className="text-xs text-muted-foreground hover:text-foreground transition-colors font-medium mb-1">← Back to Servers</Link>
+                    {isLoading ? (
+                        <div className="animate-pulse space-y-2">
+                            <div className="h-7 bg-surface rounded w-64"></div>
+                            <div className="h-4 bg-surface rounded w-32"></div>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="flex items-center gap-3">
+                                <h1 className="text-2xl font-bold text-foreground tracking-tight">{serverData?.name || 'Loading...'}</h1>
+                                <div className={cn(
+                                    "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
+                                    serverData?.status === 'running' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' :
+                                        serverData?.status === 'starting' || serverData?.status === 'stopping' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20 animate-pulse' :
+                                            'bg-rose-500/10 text-rose-500 border border-rose-500/20'
+                                )}>
+                                    {serverData?.status || 'offline'}
+                                </div>
                             </div>
-                        ) : (
-                            <>
-                                <h1 className="text-xl font-bold text-white truncate" title={serverData?.name}>{serverData?.name || 'Loading...'}</h1>
-                                <p className="text-xs text-textMuted font-mono bg-surface inline-block px-2 py-1 rounded mt-1">{id}</p>
-                            </>
-                        )}
-                    </div>
-                    <nav className="flex flex-col gap-1">
-                        {tabs.map(tab => (
-                            <button
-                                key={tab.id}
-                                onClick={() => setActiveTab(tab.id)}
-                                className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-medium text-sm border border-transparent ${activeTab === tab.id
-                                    ? 'bg-primary/10 text-primary border-primary/20 shadow-lg shadow-primary/5'
-                                    : 'text-textMuted hover:bg-white/5 hover:text-white'
-                                    }`}
-                            >
-                                <tab.icon size={16} />
-                                {tab.label}
-                            </button>
-                        ))}
-                    </nav>
+                            <p className="text-sm text-muted-foreground font-mono">{id}</p>
+                        </>
+                    )}
+                </div>
+
+                <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto no-scrollbar pb-1 md:pb-0">
+                    {tabs.map(tab => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            className={cn(
+                                "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap border border-transparent outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                                activeTab === tab.id
+                                    ? "bg-surface text-foreground border-border shadow-sm"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-surface-hover"
+                            )}
+                        >
+                            <tab.icon size={14} className={cn(activeTab === tab.id ? "text-foreground" : "text-muted-foreground opacity-70")} />
+                            {tab.label}
+                        </button>
+                    ))}
                 </div>
             </div>
 
             {/* Main Content */}
             <div className="flex-1 flex flex-col min-w-0">
-
-                {/* Mobile Tabs */}
-                <div className="md:hidden flex overflow-x-auto gap-2 mb-6 pb-2 no-scrollbar">
-                    {tabs.map(tab => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-xl whitespace-nowrap text-sm font-medium transition-all ${activeTab === tab.id ? 'bg-primary text-white' : 'bg-surface border border-border shadow-sm text-textMuted'
-                                }`}
-                        >
-                            <tab.icon size={16} />
-                            {tab.label}
-                        </button>
-                    ))}
-                </div>
-
                 {activeTab === 'console' && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }} className="space-y-6">
 
-                        {/* Server Controls */}
-                        <div className="bg-surface border border-border shadow-sm p-4 rounded-2xl flex flex-wrap gap-3">
-                            <button onClick={handleStart} disabled={isLoading || serverData?.status !== 'offline'} className="flex-1 min-w-[120px] bg-secondary hover:bg-emerald-400 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-secondary/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-                                <Play size={18} /> Start
-                            </button>
-                            <button onClick={handleRestart} disabled={isLoading || serverData?.status === 'offline'} className="flex-1 min-w-[120px] bg-accent hover:bg-yellow-500 text-black font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-accent/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-                                <RotateCcw size={18} /> Restart
-                            </button>
-                            <button
-                                onClick={handleGracefulStop}
-                                disabled={isLoading || serverData?.status === 'offline' || serverData?.status === 'stopping'}
-                                className="flex-1 min-w-[120px] bg-surface border border-danger hover:bg-danger text-danger hover:text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50"
-                            >
-                                {serverData?.status === 'stopping' ? `Stopping...` : <><Square size={18} /> Stop</>}
-                            </button>
-                            <button onClick={handleKill} disabled={isLoading || serverData?.status === 'offline'} className="flex-1 min-w-[120px] bg-danger hover:bg-red-500 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-danger/20 transition-all font-mono disabled:opacity-50 disabled:cursor-not-allowed">
-                                <Skull size={18} /> Kill -9
-                            </button>
+                        {/* Top Controls & Specs Row */}
+                        <div className="flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <Button
+                                    onClick={handleStart}
+                                    disabled={isLoading || serverData?.status !== 'offline'}
+                                    className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white min-w-[100px]"
+                                >
+                                    <Play size={16} /> Start
+                                </Button>
+                                <Button
+                                    onClick={handleRestart}
+                                    disabled={isLoading || serverData?.status === 'offline'}
+                                    variant="secondary"
+                                    className="gap-2 min-w-[100px]"
+                                >
+                                    <RotateCcw size={16} /> Restart
+                                </Button>
+                                <Button
+                                    onClick={handleGracefulStop}
+                                    disabled={isLoading || serverData?.status === 'offline' || serverData?.status === 'stopping'}
+                                    variant="outline"
+                                    className="gap-2 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 min-w-[100px]"
+                                >
+                                    {serverData?.status === 'stopping' ? `Stopping...` : <><Square size={16} /> Stop</>}
+                                </Button>
+                                <Button
+                                    onClick={handleKill}
+                                    disabled={isLoading || serverData?.status === 'offline'}
+                                    variant="danger"
+                                    className="gap-2 min-w-[100px]"
+                                >
+                                    <Skull size={16} /> Kill
+                                </Button>
+                            </div>
+
+                            <div className="flex items-center gap-4 text-sm bg-surface py-1.5 px-3 rounded-md border border-border">
+                                <div className="flex items-center gap-1.5 text-muted-foreground">
+                                    <span className="font-semibold text-foreground">Node:</span> <span className="font-mono">{serverData?.node || 'node-01'}</span>
+                                </div>
+                                <div className="h-4 w-px bg-border" />
+                                <div className="flex items-center gap-1.5 text-muted-foreground">
+                                    <span className="font-semibold text-foreground">IP:</span> <span className="font-mono select-all">192.168.1.100:25565</span>
+                                </div>
+                            </div>
                         </div>
 
                         {/* Terminal Window */}
-                        <div className="bg-surface border border-border shadow-sm rounded-2xl overflow-hidden border border-white/10 shadow-2xl flex flex-col h-[400px]">
-                            <div className="bg-surface/80 px-4 py-2 border-b border-white/5 flex items-center justify-between">
+                        <div className="bg-zinc-950 border border-border shadow-sm rounded-lg overflow-hidden flex flex-col h-[450px]">
+                            <div className="bg-surface border-b border-border px-4 py-2 flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                    <div className="flex gap-1.5"><div className="w-3 h-3 rounded-full bg-danger" /><div className="w-3 h-3 rounded-full bg-accent" /><div className="w-3 h-3 rounded-full bg-secondary" /></div>
-                                    <span className="text-xs text-textMuted font-mono ml-2">{serverData?.node || 'node1.hoxen.one'} - root@{id?.substring(0, 8)}</span>
+                                    <Terminal size={14} className="text-muted-foreground" />
+                                    <span className="text-xs font-mono text-muted-foreground">Console Output</span>
                                 </div>
                                 {serverData?.status === 'stopping' && (
-                                    <span className="text-xs font-bold text-danger animate-pulse">Graceful Shutdown in Progress...</span>
+                                    <span className="text-xs font-mono text-amber-500 animate-pulse">Graceful Shutdown in Progress...</span>
                                 )}
                             </div>
-                            <div className="flex-1 bg-[#0c0c0e] p-4 overflow-y-auto font-mono text-sm leading-relaxed scroll-smooth scrollbar-thin flex flex-col justify-start">
+                            <div className="flex-1 p-4 overflow-y-auto font-mono text-sm leading-relaxed scroll-smooth scrollbar-thin flex flex-col justify-start">
                                 <div>
-                                    {logs.length === 0 && <div className="text-textMuted italic">Server is offline. Press Start to boot.</div>}
+                                    {logs.length === 0 && <div className="text-muted-foreground italic">Server is offline. Press Start to boot.</div>}
                                     {logs.map((log, i) => (
-                                        <div key={i} className="text-gray-300">
-                                            <span className="text-blue-400 mr-2">{formatTimestamp(log.timestamp)}</span>
-                                            <span className={log.type === 'INFO' ? 'text-green-400' : log.type === 'ERROR' ? 'text-red-400' : 'text-accent'}>{log.message}</span>
+                                        <div key={i} className="text-zinc-300">
+                                            <span className="text-blue-400/80 mr-2">{formatTimestamp(log.timestamp)}</span>
+                                            <span className={log.type === 'INFO' ? 'text-zinc-300' : log.type === 'ERROR' ? 'text-rose-400' : 'text-amber-400'}>{log.message}</span>
                                         </div>
                                     ))}
                                     <div ref={logsEndRef} />
                                 </div>
                             </div>
-                            <div className="bg-surface border-t border-white/5 p-2">
-                                <form onSubmit={submitCommand}>
-                                    <input
+                            <div className="border-t border-border bg-surface p-2">
+                                <form onSubmit={submitCommand} className="relative">
+                                    <Terminal size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                                    <Input
                                         type="text"
                                         value={consoleInput}
-                                        onChange={(e) => setConsoleInput(e.target.value)}
-                                        placeholder={serverData?.status === 'running' ? "Type a command..." : "Server must be running to execute commands"}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setConsoleInput(e.target.value)}
+                                        placeholder={serverData?.status === 'running' ? "Execute a command..." : "Server must be running to execute commands"}
                                         disabled={serverData?.status !== 'running'}
-                                        className="w-full bg-black/50 border border-white/10 rounded-lg py-2 px-3 outline-none focus:border-primary text-white font-mono text-sm disabled:opacity-50"
+                                        className="w-full pl-9 h-9 font-mono text-sm bg-background border-none shadow-none focus-visible:ring-0"
                                     />
                                 </form>
                             </div>
                         </div>
 
                         {/* Graphs */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            <div className="bg-surface border border-border shadow-sm p-5 rounded-2xl relative overflow-hidden group">
-                                <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                <div className="flex items-center justify-between mb-2">
-                                    <div className="flex items-center gap-2 text-white font-semibold"><Cpu size={16} className="text-primary" /> CPU Usage</div>
-                                    <span className="font-mono text-sm font-bold text-primary">{stats[19]?.cpu.toFixed(1) || 0}%</span>
-                                </div>
-                                <div className="text-xs text-textMuted mb-2">0% / {serverData?.specs?.cpu ? serverData.specs.cpu * 100 : '--'}% ({serverData?.specs?.cpu || '--'} Cores)</div>
-                                <div className="h-24">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <AreaChart data={stats}>
-                                            <Area type="monotone" dataKey="cpu" stroke="#6366f1" fillOpacity={0.2} fill="#6366f1" isAnimationActive={false} />
-                                        </AreaChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            </div>
-                            <div className="bg-surface border border-border shadow-sm p-5 rounded-2xl relative overflow-hidden group">
-                                <div className="absolute inset-0 bg-accent/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                <div className="flex items-center justify-between mb-2">
-                                    <div className="flex items-center gap-2 text-white font-semibold"><MemoryStick size={16} className="text-accent" /> Memory Usage</div>
-                                    <span className="font-mono text-sm font-bold text-accent">{stats[19]?.ram.toFixed(0) || 0} MB</span>
-                                </div>
-                                <div className="text-xs text-textMuted mb-2">0 MB / {serverData?.specs?.ram ? serverData.specs.ram * 1024 : '--'} MB</div>
-                                <div className="h-24">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <AreaChart data={stats}>
-                                            <Area type="monotone" dataKey="ram" stroke="#f59e0b" fillOpacity={0.2} fill="#f59e0b" isAnimationActive={false} />
-                                        </AreaChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            </div>
-                            <div className="bg-surface border border-border shadow-sm p-5 rounded-2xl relative overflow-hidden group">
-                                <div className="absolute inset-0 bg-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                <div className="flex items-center justify-between mb-2">
-                                    <div className="flex items-center gap-2 text-white font-semibold"><Activity size={16} className="text-secondary" /> Network (In/Out)</div>
-                                    <div className="font-mono text-sm font-bold flex gap-2">
-                                        <span className="text-secondary">{((stats[19]?.netIn || 0) + (stats[19]?.netOut || 0)).toFixed(1)} MB/s</span>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div className="bg-surface border border-border shadow-sm p-4 rounded-lg flex flex-col justify-between">
+                                <div>
+                                    <div className="flex items-center justify-between mb-1">
+                                        <div className="flex items-center gap-1.5 text-foreground font-semibold text-sm">
+                                            <Cpu size={14} className="text-muted-foreground" /> CPU Load
+                                        </div>
+                                        <span className="font-mono text-sm font-bold text-foreground">{stats[19]?.cpu.toFixed(1) || 0}%</span>
+                                    </div>
+                                    <div className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground mb-4">
+                                        {serverData?.specs?.cpu || '--'} Cores Limit
                                     </div>
                                 </div>
-                                <div className="text-xs text-textMuted flex gap-3 mb-2">
-                                    <span className="text-secondary">Inbound</span>
-                                    <span className="text-danger">Outbound</span>
-                                </div>
-                                <div className="h-24">
+                                <div className="h-16 -mx-2 -mb-2 mt-auto">
                                     <ResponsiveContainer width="100%" height="100%">
                                         <AreaChart data={stats}>
-                                            <Area type="monotone" dataKey="netIn" stroke="#10b981" fillOpacity={0.2} fill="#10b981" isAnimationActive={false} />
-                                            <Area type="monotone" dataKey="netOut" stroke="#ef4444" fillOpacity={0.2} fill="#ef4444" isAnimationActive={false} />
+                                            <Area type="monotone" dataKey="cpu" stroke="currentColor" className="text-blue-500" strokeWidth={2} fillOpacity={0.1} fill="currentColor" isAnimationActive={false} />
+                                        </AreaChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+
+                            <div className="bg-surface border border-border shadow-sm p-4 rounded-lg flex flex-col justify-between">
+                                <div>
+                                    <div className="flex items-center justify-between mb-1">
+                                        <div className="flex items-center gap-1.5 text-foreground font-semibold text-sm">
+                                            <MemoryStick size={14} className="text-muted-foreground" /> Memory
+                                        </div>
+                                        <span className="font-mono text-sm font-bold text-foreground">{stats[19]?.ram.toFixed(0) || 0} MB</span>
+                                    </div>
+                                    <div className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground mb-4">
+                                        {serverData?.specs?.ram ? serverData.specs.ram * 1024 : '--'} MB Allocated
+                                    </div>
+                                </div>
+                                <div className="h-16 -mx-2 -mb-2 mt-auto">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <AreaChart data={stats}>
+                                            <Area type="monotone" dataKey="ram" stroke="currentColor" className="text-purple-500" strokeWidth={2} fillOpacity={0.1} fill="currentColor" isAnimationActive={false} />
+                                        </AreaChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+
+                            <div className="bg-surface border border-border shadow-sm p-4 rounded-lg flex flex-col justify-between">
+                                <div>
+                                    <div className="flex items-center justify-between mb-1">
+                                        <div className="flex items-center gap-1.5 text-foreground font-semibold text-sm">
+                                            <Activity size={14} className="text-muted-foreground" /> Network Out
+                                        </div>
+                                        <span className="font-mono text-sm font-bold text-foreground">{stats[19]?.netOut?.toFixed(1) || 0} MB/s</span>
+                                    </div>
+                                    <div className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground mb-4">
+                                        Traffic
+                                    </div>
+                                </div>
+                                <div className="h-16 -mx-2 -mb-2 mt-auto">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <AreaChart data={stats}>
+                                            <Area type="monotone" dataKey="netOut" stroke="currentColor" className="text-emerald-500" strokeWidth={2} fillOpacity={0.1} fill="currentColor" isAnimationActive={false} />
                                         </AreaChart>
                                     </ResponsiveContainer>
                                 </div>
@@ -710,44 +747,48 @@ const ServerPanel = () => {
                 )}
 
                 {activeTab === 'files' && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-surface border border-border shadow-sm p-6 rounded-3xl">
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-surface border border-border shadow-sm p-6 rounded-lg">
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                             <div>
-                                <h2 className="text-2xl font-bold text-white mb-1">File Manager</h2>
-                                <p className="text-sm text-textMuted font-mono bg-white/5 py-1 px-2 rounded-lg inline-block">/home/container</p>
+                                <h2 className="text-xl font-bold text-foreground mb-1">File Manager</h2>
+                                <p className="text-xs text-muted-foreground font-mono bg-background border border-border py-1 px-2 rounded-md inline-block">/home/container</p>
                             </div>
                             <div className="flex gap-2 w-full md:w-auto">
-                                <button className="flex-1 md:flex-none justify-center bg-surface hover:bg-white/10 border border-white/10 text-white font-medium py-2 px-4 rounded-xl transition-all text-sm">New File</button>
-                                <button className="flex-1 md:flex-none justify-center bg-surface hover:bg-white/10 border border-white/10 text-white font-medium py-2 px-4 rounded-xl transition-all text-sm">New Folder</button>
-                                <button className="flex-1 md:flex-none justify-center bg-primary hover:bg-primary-hover text-white font-medium py-2 px-4 rounded-xl transition-all text-sm shadow-lg shadow-primary/20">Upload</button>
+                                <Button variant="outline" size="sm" className="flex-1 md:flex-none">New File</Button>
+                                <Button variant="outline" size="sm" className="flex-1 md:flex-none">New Folder</Button>
+                                <Button size="sm" className="flex-1 md:flex-none">Upload</Button>
                             </div>
                         </div>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse">
+                        <div className="overflow-x-auto border border-border rounded-lg bg-background">
+                            <table className="w-full text-left border-collapse text-sm">
                                 <thead>
-                                    <tr className="border-b border-white/10 text-textMuted text-xs uppercase tracking-wider">
-                                        <th className="pb-3 pl-4 font-semibold w-[60%]">Name</th>
-                                        <th className="pb-3 p-4 font-semibold">Size</th>
-                                        <th className="pb-3 p-4 font-semibold hidden md:table-cell">Last Modified</th>
-                                        <th className="pb-3 p-4 font-semibold text-right"></th>
+                                    <tr className="border-b border-border bg-surface text-muted-foreground uppercase tracking-wider text-xs">
+                                        <th className="py-3 px-4 font-semibold w-[60%]">Name</th>
+                                        <th className="py-3 px-4 font-semibold">Size</th>
+                                        <th className="py-3 px-4 font-semibold hidden md:table-cell">Last Modified</th>
+                                        <th className="py-3 px-4 font-semibold text-right"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {files.map((f, i) => (
-                                        <tr key={i} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors group">
-                                            <td className="p-4 flex items-center gap-3">
-                                                {f.type === 'folder' ? <Folder size={18} className="text-accent" /> : <File size={18} className="text-textMuted" />}
-                                                <span className="font-medium text-white hover:text-primary transition-colors cursor-pointer">{f.name}</span>
+                                    {files.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={4} className="p-8 text-center text-muted-foreground text-sm">No files found.</td>
+                                        </tr>
+                                    ) : files.map((f, i) => (
+                                        <tr key={i} className="border-b border-border hover:bg-surface transition-colors group">
+                                            <td className="p-3 px-4 flex items-center gap-3">
+                                                {f.type === 'folder' ? <Folder size={16} className="text-blue-500" /> : <File size={16} className="text-muted-foreground" />}
+                                                <span className="font-medium text-foreground hover:text-primary transition-colors cursor-pointer">{f.name}</span>
                                             </td>
-                                            <td className="p-4 text-sm text-textMuted">{f.size}</td>
-                                            <td className="p-4 text-sm text-textMuted hidden md:table-cell">{f.date}</td>
-                                            <td className="p-4 text-right">
-                                                <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <button onClick={() => toast('Edit feature incoming', { icon: '📝' })} className="p-2 bg-surface hover:bg-white/10 text-textMuted hover:text-white rounded-lg transition-colors border border-white/5 hover:border-white/20"><Edit2 size={14} /></button>
-                                                    <button onClick={() => {
+                                            <td className="p-3 px-4 text-muted-foreground">{f.size}</td>
+                                            <td className="p-3 px-4 text-muted-foreground hidden md:table-cell">{f.date}</td>
+                                            <td className="p-3 px-4 text-right">
+                                                <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <Button variant="ghost" size="icon" onClick={() => toast('Edit feature incoming', { icon: '📝' })} className="h-8 w-8"><Edit2 size={14} /></Button>
+                                                    <Button variant="ghost" size="icon" onClick={() => {
                                                         setFiles(prev => prev.filter(x => x.name !== f.name));
                                                         toast.success(`Deleted ${f.name}`);
-                                                    }} className="p-2 bg-surface hover:bg-danger/20 text-textMuted hover:text-danger rounded-lg transition-colors border border-white/5 hover:border-danger/30"><Trash2 size={14} /></button>
+                                                    }} className="h-8 w-8 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10"><Trash2 size={14} /></Button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -759,54 +800,58 @@ const ServerPanel = () => {
                 )}
 
                 {activeTab === 'databases' && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-surface border border-border shadow-sm p-6 rounded-3xl">
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-surface border border-border shadow-sm p-6 rounded-lg">
                         <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-2xl font-bold text-white">Databases</h2>
-                            <button onClick={() => {
+                            <h2 className="text-xl font-bold text-foreground">Databases</h2>
+                            <Button size="sm" onClick={() => {
                                 const dbName = prompt('Database Name:');
                                 if (dbName) {
                                     setDatabases(prev => [...prev, { name: dbName, host: 'db2.hoxen.one', username: `u${Math.floor(Math.random() * 1000)}_db`, size: '0 MB' }]);
                                     toast.success('Database created');
                                 }
-                            }} className="flex items-center gap-2 bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-lg shadow-primary/20">
+                            }} className="gap-2">
                                 <Plus size={16} /> New Database
-                            </button>
+                            </Button>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {databases?.map((db, i) => (
-                                <div key={i} className="bg-surface border border-white/5 p-6 rounded-2xl relative group hover:border-white/20 transition-all">
+                            {databases.length === 0 ? (
+                                <div className="col-span-full py-8 text-center text-muted-foreground text-sm border border-border border-dashed rounded-lg bg-background">
+                                    No databases created yet.
+                                </div>
+                            ) : databases.map((db, i) => (
+                                <div key={i} className="bg-background border border-border p-5 rounded-lg relative group hover:border-primary/20 transition-all flex flex-col">
                                     <div className="flex justify-between items-start mb-4">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary border border-secondary/20">
-                                                <Database size={20} />
+                                            <div className="w-10 h-10 rounded-md bg-surface border border-border flex items-center justify-center text-foreground">
+                                                <Database size={18} />
                                             </div>
                                             <div>
-                                                <h3 className="font-bold text-white text-lg">{db.name}</h3>
-                                                <span className="text-xs text-secondary font-mono bg-secondary/10 px-2 py-0.5 rounded border border-secondary/20">Active</span>
+                                                <h3 className="font-bold text-foreground text-base tracking-tight">{db.name}</h3>
+                                                <span className="text-[10px] text-emerald-500 font-mono bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 uppercase tracking-widest font-bold">Active</span>
                                             </div>
                                         </div>
-                                        <button onClick={() => {
+                                        <Button variant="ghost" size="icon" onClick={() => {
                                             setDatabases(prev => prev.filter(x => x.name !== db.name));
                                             toast.success('Database deleted');
-                                        }} className="text-danger hover:bg-danger/10 p-2 rounded-lg transition-colors opacity-0 group-hover:opacity-100"><Trash2 size={16} /></button>
+                                        }} className="text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={14} /></Button>
                                     </div>
-                                    <div className="space-y-3 font-mono text-sm">
-                                        <div className="flex justify-between border-b border-white/5 pb-2">
-                                            <span className="text-textMuted text-xs font-sans uppercase tracking-wider">Host</span>
-                                            <span className="text-white select-all">{db.host}</span>
+                                    <div className="space-y-3 font-mono text-xs flex-1">
+                                        <div className="flex justify-between border-b border-border pb-2">
+                                            <span className="text-muted-foreground font-sans uppercase tracking-wider font-semibold text-[10px]">Host</span>
+                                            <span className="text-foreground select-all">{db.host}</span>
                                         </div>
-                                        <div className="flex justify-between border-b border-white/5 pb-2">
-                                            <span className="text-textMuted text-xs font-sans uppercase tracking-wider">Username</span>
-                                            <span className="text-white select-all">{db.username}</span>
+                                        <div className="flex justify-between border-b border-border pb-2">
+                                            <span className="text-muted-foreground font-sans uppercase tracking-wider font-semibold text-[10px]">Username</span>
+                                            <span className="text-foreground select-all">{db.username}</span>
                                         </div>
                                         <div className="flex justify-between pt-1">
-                                            <span className="text-textMuted text-xs font-sans uppercase tracking-wider">Size</span>
-                                            <span className="text-white">{db.size}</span>
+                                            <span className="text-muted-foreground font-sans uppercase tracking-wider font-semibold text-[10px]">Size</span>
+                                            <span className="text-foreground">{db.size}</span>
                                         </div>
                                     </div>
-                                    <button onClick={() => toast.success(`Revealed password for ${db.name}: hunter2`)} className="w-full mt-4 flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white py-2 rounded-xl transition-colors font-medium text-sm">
-                                        <Lock size={14} /> Reveal Password
-                                    </button>
+                                    <Button variant="outline" onClick={() => toast.success(`Revealed password for ${db.name}: hunter2`)} className="w-full mt-5 gap-2 h-9 text-xs">
+                                        <Lock size={12} /> Reveal Password
+                                    </Button>
                                 </div>
                             ))}
                         </div>
@@ -814,36 +859,40 @@ const ServerPanel = () => {
                 )}
 
                 {activeTab === 'schedules' && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-surface border border-border shadow-sm p-6 rounded-3xl">
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-surface border border-border shadow-sm p-6 rounded-lg">
                         <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-2xl font-bold text-white">Schedules & Cron</h2>
-                            <button onClick={() => toast('Schedule creation modal opened', { icon: '📝' })} className="flex items-center gap-2 bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-lg shadow-primary/20">
+                            <h2 className="text-xl font-bold text-foreground">Schedules & Cron</h2>
+                            <Button size="sm" onClick={() => toast('Schedule creation modal opened', { icon: '📝' })} className="gap-2">
                                 <Plus size={16} /> Create Schedule
-                            </button>
+                            </Button>
                         </div>
                         <div className="space-y-3">
-                            {schedules?.map((s, i) => (
-                                <div key={i} className="flex flex-col md:flex-row items-start md:items-center justify-between p-5 bg-surface border border-white/5 hover:border-primary/30 rounded-2xl transition-all group">
+                            {schedules.length === 0 ? (
+                                <div className="py-8 text-center text-muted-foreground text-sm border border-border border-dashed rounded-lg bg-background">
+                                    No schedules configured.
+                                </div>
+                            ) : schedules.map((s, i) => (
+                                <div key={i} className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 bg-background border border-border hover:border-primary/20 rounded-lg transition-all group">
                                     <div className="flex items-center gap-4 mb-4 md:mb-0">
-                                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
-                                            <Clock size={20} />
+                                        <div className="w-10 h-10 rounded-md bg-surface flex items-center justify-center text-primary border border-border">
+                                            <Clock size={18} />
                                         </div>
                                         <div>
-                                            <h3 className="font-bold text-white text-lg">{s.name}</h3>
-                                            <p className="text-sm text-textMuted">Executes: <span className="font-mono bg-black/40 px-1.5 py-0.5 rounded text-white">{s.cron}</span></p>
+                                            <h3 className="font-bold text-foreground text-sm">{s.name}</h3>
+                                            <p className="text-xs text-muted-foreground mt-0.5">Executes: <span className="font-mono bg-surface border border-border px-1.5 py-0.5 rounded text-foreground">{s.cron}</span></p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-6 w-full md:w-auto justify-between md:justify-end">
                                         <div className="text-right">
-                                            <p className="text-xs text-textMuted uppercase tracking-wider">Next Run</p>
-                                            <p className="font-medium text-amber-400">{s.next}</p>
+                                            <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Next Run</p>
+                                            <p className="font-medium text-sm text-amber-500">{s.next}</p>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <button className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl text-sm font-medium transition-colors">Edit</button>
-                                            <button onClick={() => {
+                                            <Button variant="outline" size="sm">Edit</Button>
+                                            <Button variant="ghost" size="icon" onClick={() => {
                                                 setSchedules(prev => prev.filter(x => x.name !== s.name));
                                                 toast.success('Schedule removed');
-                                            }} className="p-2 bg-white/5 hover:bg-danger/20 hover:text-danger hover:border-danger/30 border border-white/10 text-textMuted rounded-xl transition-colors"><Trash2 size={16} /></button>
+                                            }} className="h-9 w-9 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10"><Trash2 size={14} /></Button>
                                         </div>
                                     </div>
                                 </div>
@@ -853,36 +902,40 @@ const ServerPanel = () => {
                 )}
 
                 {activeTab === 'users' && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-surface border border-border shadow-sm p-6 rounded-3xl">
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-surface border border-border shadow-sm p-6 rounded-lg">
                         <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-2xl font-bold text-white">Subusers</h2>
-                            <button onClick={() => toast.success('Invite link copied to clipboard!')} className="flex items-center gap-2 bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-lg shadow-primary/20">
+                            <h2 className="text-xl font-bold text-foreground">Subusers</h2>
+                            <Button size="sm" onClick={() => toast.success('Invite link copied to clipboard!')} className="gap-2">
                                 <Plus size={16} /> Invite User
-                            </button>
+                            </Button>
                         </div>
                         <div className="space-y-3">
-                            {users?.map((u, i) => (
-                                <div key={i} className="flex flex-col md:flex-row items-start md:items-center justify-between p-5 bg-surface border border-white/5 rounded-2xl transition-all group">
+                            {users.length === 0 ? (
+                                <div className="py-8 text-center text-muted-foreground text-sm border border-border border-dashed rounded-lg bg-background">
+                                    No subusers added yet.
+                                </div>
+                            ) : users.map((u, i) => (
+                                <div key={i} className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 bg-background border border-border rounded-lg transition-all group">
                                     <div className="flex items-center gap-4 mb-4 md:mb-0">
-                                        <div className="hidden md:flex w-12 h-12 rounded-full bg-white/5 items-center justify-center text-textMuted border border-white/10">
-                                            <Users size={20} />
+                                        <div className="hidden md:flex w-10 h-10 rounded-md bg-surface items-center justify-center text-muted-foreground border border-border">
+                                            <Users size={18} />
                                         </div>
                                         <div>
-                                            <h3 className="font-bold text-white mb-1 flex items-center gap-2">
+                                            <h3 className="font-bold text-foreground text-sm mb-1 flex items-center gap-2">
                                                 {u.email}
-                                                {u['2fa'] && <span className="text-[10px] bg-secondary/10 text-secondary border border-secondary/20 px-2 py-0.5 rounded-full uppercase tracking-widest font-bold flex items-center gap-1"><ShieldAlert size={10} /> 2FA setup</span>}
+                                                {u['2fa'] && <span className="text-[10px] bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-2 py-0.5 rounded uppercase tracking-widest font-bold flex items-center gap-1"><ShieldAlert size={10} /> 2FA setup</span>}
                                             </h3>
-                                            <div className="flex gap-2">
-                                                {u.perms?.map((p: string) => <span key={p} className="text-xs font-mono text-textMuted bg-black/40 border border-white/10 px-2 py-0.5 rounded">{p}</span>)}
+                                            <div className="flex gap-1.5 flex-wrap">
+                                                {u.perms?.map((p: string) => <span key={p} className="text-[10px] font-mono font-medium text-foreground bg-surface border border-border px-1.5 py-0.5 rounded">{p}</span>)}
                                             </div>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2 w-full md:w-auto justify-end">
-                                        <button className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl text-sm font-medium transition-colors">Manage Roles</button>
-                                        <button onClick={() => {
+                                        <Button variant="outline" size="sm">Manage Roles</Button>
+                                        <Button variant="ghost" size="icon" onClick={() => {
                                             setUsers(prev => prev.filter(x => x.email !== u.email));
                                             toast.success('User removed');
-                                        }} className="p-2 bg-white/5 hover:bg-danger/20 hover:text-danger hover:border-danger/30 border border-white/10 text-textMuted rounded-xl transition-colors"><Trash2 size={16} /></button>
+                                        }} className="h-9 w-9 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10"><Trash2 size={14} /></Button>
                                     </div>
                                 </div>
                             ))}
@@ -891,36 +944,40 @@ const ServerPanel = () => {
                 )}
 
                 {activeTab === 'backups' && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-surface border border-border shadow-sm p-6 rounded-3xl">
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-surface border border-border shadow-sm p-6 rounded-lg">
                         <div className="flex justify-between items-center mb-6">
                             <div>
-                                <h2 className="text-2xl font-bold text-white mb-1">Backups</h2>
-                                <p className="text-sm text-textMuted">Limit: <span className="text-white font-medium">1 / 3</span> backups</p>
+                                <h2 className="text-xl font-bold text-foreground mb-1">Backups</h2>
+                                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Limit: <span className="text-foreground">1 / 3</span> backups</p>
                             </div>
-                            <button className="flex items-center gap-2 bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-lg shadow-primary/20">
+                            <Button size="sm" className="gap-2">
                                 <Archive size={16} /> Create Backup
-                            </button>
+                            </Button>
                         </div>
                         <div className="space-y-3">
-                            {backups?.map((b, i) => (
-                                <div key={i} className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 bg-surface border border-white/5 hover:border-white/20 rounded-2xl transition-all group">
+                            {backups.length === 0 ? (
+                                <div className="py-8 text-center text-muted-foreground text-sm border border-border border-dashed rounded-lg bg-background">
+                                    No backups exist for this instance.
+                                </div>
+                            ) : backups.map((b, i) => (
+                                <div key={i} className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 bg-background border border-border hover:border-primary/20 rounded-lg transition-all group">
                                     <div className="flex items-center gap-4 mb-4 md:mb-0">
-                                        <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent border border-accent/20">
+                                        <div className="w-10 h-10 rounded-md bg-surface flex items-center justify-center text-primary border border-border">
                                             <Archive size={18} />
                                         </div>
                                         <div>
-                                            <h3 className="font-bold text-white">{b.name} <span className="text-xs text-textMuted ml-2 font-normal">{b.size}</span></h3>
-                                            <p className="text-sm text-textMuted">{b.date}</p>
+                                            <h3 className="font-bold text-foreground text-sm flex items-center gap-2">{b.name} <span className="text-[10px] text-muted-foreground font-mono bg-surface border border-border px-1.5 py-0.5 rounded font-normal">{b.size}</span></h3>
+                                            <p className="text-xs text-muted-foreground mt-0.5">{b.date}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2 w-full md:w-auto justify-end">
-                                        <span className="text-xs bg-secondary/10 text-secondary border border-secondary/20 px-3 py-1.5 rounded-lg uppercase tracking-wider font-bold mr-2">{b.status}</span>
-                                        <button onClick={() => toast.success('Downloading backup...')} className="p-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl transition-colors"><Download size={16} /></button>
-                                        <button onClick={() => toast.success('Restoring backup...')} className="p-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl transition-colors tooltip" title="Restore"><RotateCcw size={16} /></button>
-                                        <button onClick={() => {
+                                        <span className="text-[10px] bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-2 py-1 rounded font-bold uppercase tracking-widest mr-2">{b.status}</span>
+                                        <Button variant="outline" size="icon" onClick={() => toast.success('Downloading backup...')} className="h-9 w-9"><Download size={14} /></Button>
+                                        <Button variant="outline" size="icon" onClick={() => toast.success('Restoring backup...')} className="h-9 w-9" title="Restore"><RotateCcw size={14} /></Button>
+                                        <Button variant="ghost" size="icon" onClick={() => {
                                             setBackups(prev => prev.filter(x => x.name !== b.name));
                                             toast.success('Backup deleted');
-                                        }} className="p-2 bg-white/5 hover:bg-danger/20 hover:text-danger hover:border-danger/30 border border-white/10 text-textMuted rounded-xl transition-colors"><Trash2 size={16} /></button>
+                                        }} className="h-9 w-9 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10"><Trash2 size={14} /></Button>
                                     </div>
                                 </div>
                             ))}
@@ -929,44 +986,48 @@ const ServerPanel = () => {
                 )}
 
                 {activeTab === 'network' && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-surface border border-border shadow-sm p-6 rounded-3xl">
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-surface border border-border shadow-sm p-6 rounded-lg">
                         <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-2xl font-bold text-white">Network Allocations</h2>
-                            <button onClick={() => {
+                            <h2 className="text-xl font-bold text-foreground">Network Allocations</h2>
+                            <Button variant="outline" size="sm" onClick={() => {
                                 setAllocations(prev => [...prev, { ip: '192.168.1.100', port: Math.floor(Math.random() * 50000 + 10000), isDefault: false, alias: '' }]);
                                 toast.success('Port requested and currently provisioning');
-                            }} className="flex items-center gap-2 bg-surface hover:bg-white/10 border border-white/10 text-white px-4 py-2 rounded-xl text-sm font-medium transition-all">
+                            }} className="gap-2">
                                 <Plus size={16} /> Request Port
-                            </button>
+                            </Button>
                         </div>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse">
+                        <div className="overflow-x-auto border border-border rounded-lg bg-background">
+                            <table className="w-full text-left border-collapse text-sm">
                                 <thead>
-                                    <tr className="border-b border-white/10 text-textMuted text-xs uppercase tracking-wider">
-                                        <th className="pb-3 pl-4 font-semibold">IP Address</th>
-                                        <th className="pb-3 p-4 font-semibold">Port</th>
-                                        <th className="pb-3 p-4 font-semibold">Alias (Hostname)</th>
-                                        <th className="pb-3 p-4 font-semibold text-right">Actions</th>
+                                    <tr className="border-b border-border bg-surface text-muted-foreground uppercase tracking-wider text-xs">
+                                        <th className="py-3 px-4 font-semibold">IP Address</th>
+                                        <th className="py-3 px-4 font-semibold">Port</th>
+                                        <th className="py-3 px-4 font-semibold">Alias (Hostname)</th>
+                                        <th className="py-3 px-4 font-semibold text-right">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {allocations?.map((a, i) => (
-                                        <tr key={i} className={`border-b border-white/5 hover:bg-white/[0.02] transition-colors group ${a.isDefault ? 'bg-primary/5' : ''}`}>
-                                            <td className="p-4 font-mono text-sm text-white">
+                                    {allocations.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={4} className="p-8 text-center text-muted-foreground text-sm">No allocations found. Start your server to allocate ports.</td>
+                                        </tr>
+                                    ) : allocations.map((a, i) => (
+                                        <tr key={i} className={`border-b border-border hover:bg-surface transition-colors group ${a.isDefault ? 'bg-primary/5' : ''}`}>
+                                            <td className="p-3 px-4 font-mono text-sm text-foreground">
                                                 {a.ip}
-                                                {a.isDefault && <span className="ml-3 text-[10px] bg-primary/20 text-primary border border-primary/30 px-2 py-0.5 rounded-full uppercase tracking-widest font-bold">Primary</span>}
+                                                {a.isDefault && <span className="ml-3 text-[10px] bg-primary/20 text-primary border border-primary/30 px-2 py-0.5 rounded font-bold uppercase tracking-widest">Primary</span>}
                                             </td>
-                                            <td className="p-4 font-mono text-white text-sm">{a.port}</td>
-                                            <td className="p-4">
+                                            <td className="p-3 px-4 font-mono text-foreground text-sm">{a.port}</td>
+                                            <td className="p-3 px-4">
                                                 {a.alias ? (
-                                                    <span className="bg-surface border border-white/10 text-white px-3 py-1 rounded-lg text-sm">{a.alias}</span>
+                                                    <span className="font-mono text-xs bg-background border border-border text-foreground px-2 py-1 rounded">{a.alias}</span>
                                                 ) : (
-                                                    <span className="text-textMuted text-sm italic">None</span>
+                                                    <span className="text-muted-foreground text-xs italic">None</span>
                                                 )}
                                             </td>
-                                            <td className="p-4 text-right">
+                                            <td className="p-3 px-4 text-right">
                                                 <div className="flex items-center justify-end gap-2">
-                                                    {!a.isDefault && <button onClick={() => toast.success('Allocation marked as primary')} className="text-xs border border-primary/50 text-primary hover:bg-primary hover:text-white px-3 py-1 rounded-lg transition-colors font-semibold">Make Primary</button>}
+                                                    {!a.isDefault && <Button variant="outline" size="sm" onClick={() => toast.success('Allocation marked as primary')} className="h-8 text-xs">Make Primary</Button>}
                                                 </div>
                                             </td>
                                         </tr>
