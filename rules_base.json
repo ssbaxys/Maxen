@@ -8,6 +8,9 @@
                 ".write": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('root').val() === true)",
                 "root": {
                     ".write": false
+                },
+                "banData": {
+                    ".write": "auth != null && root.child('users').child(auth.uid).child('root').val() === true"
                 }
             }
         },
@@ -18,9 +21,20 @@
             }
         },
         "servers": {
+            ".read": "auth != null && root.child('users').child(auth.uid).child('root').val() === true",
             "$serverId": {
                 ".read": "auth != null && (data.child('owner').val() === auth.uid || root.child('serverMembers').child($serverId).child(auth.uid).exists() || root.child('users').child(auth.uid).child('root').val() === true)",
-                ".write": "auth != null && (data.child('owner').val() === auth.uid || (data.exists() === false && newData.child('owner').val() === auth.uid) || root.child('users').child(auth.uid).child('root').val() === true)"
+                ".write": "auth != null && (data.child('owner').val() === auth.uid || (!data.exists() && newData.child('owner').val() === auth.uid) || root.child('users').child(auth.uid).child('root').val() === true)",
+                ".validate": "newData.hasChildren(['owner', 'name', 'status'])",
+                "owner": {
+                    ".validate": "newData.isString()"
+                },
+                "name": {
+                    ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 64"
+                },
+                "status": {
+                    ".validate": "newData.isString() && (newData.val() === 'online' || newData.val() === 'offline' || newData.val() === 'running' || newData.val() === 'starting' || newData.val() === 'stopping')"
+                }
             }
         },
         "serverMembers": {
@@ -29,17 +43,27 @@
                 ".write": "auth != null && (root.child('servers').child($serverId).child('owner').val() === auth.uid || root.child('users').child(auth.uid).child('root').val() === true)"
             }
         },
-        "logs": {
+        "serverLogs": {
             "$serverId": {
                 ".read": "auth != null && (root.child('servers').child($serverId).child('owner').val() === auth.uid || root.child('serverMembers').child($serverId).child(auth.uid).exists() || root.child('users').child(auth.uid).child('root').val() === true)",
-                ".write": false
+                ".write": "auth != null && (root.child('servers').child($serverId).child('owner').val() === auth.uid || root.child('users').child(auth.uid).child('root').val() === true)"
             }
         },
-        "stats": {
+        "serverStats": {
             "$serverId": {
                 ".read": "auth != null && (root.child('servers').child($serverId).child('owner').val() === auth.uid || root.child('serverMembers').child($serverId).child(auth.uid).exists() || root.child('users').child(auth.uid).child('root').val() === true)",
-                ".write": false
+                ".write": "auth != null && (root.child('servers').child($serverId).child('owner').val() === auth.uid || root.child('users').child(auth.uid).child('root').val() === true)"
             }
+        },
+        "serverFirewalls": {
+            "$serverId": {
+                ".read": "auth != null && (root.child('servers').child($serverId).child('owner').val() === auth.uid || root.child('serverMembers').child($serverId).child(auth.uid).exists() || root.child('users').child(auth.uid).child('root').val() === true)",
+                ".write": "auth != null && (root.child('servers').child($serverId).child('owner').val() === auth.uid || root.child('users').child(auth.uid).child('root').val() === true)"
+            }
+        },
+        "logs": {
+            ".read": "auth != null && root.child('users').child(auth.uid).child('root').val() === true",
+            ".write": "auth != null && root.child('users').child(auth.uid).child('root').val() === true"
         },
         "settings": {
             ".read": "auth != null",

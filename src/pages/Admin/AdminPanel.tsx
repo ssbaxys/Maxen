@@ -185,7 +185,7 @@ const AdminPanel = () => {
                         <button
                             key={tab.id}
                             onClick={() => { setActiveTab(tab.id); setSearch(''); }}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-xl whitespace-nowrap text-sm font-medium transition-all ${activeTab === tab.id ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-surface hover:bg-surface-hover text-muted-foreground border border-transparent'}`}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-md whitespace-nowrap text-sm font-medium transition-all ${activeTab === tab.id ? 'bg-foreground text-background shadow-sm' : 'bg-surface hover:bg-surface-hover text-muted-foreground border border-transparent'}`}
                         >
                             <tab.icon size={16} />
                             {tab.label}
@@ -249,6 +249,26 @@ const AdminPanel = () => {
                                     </AreaChart>
                                 </ResponsiveContainer>
                             </Card>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <Card className="p-6">
+                                    <p className="text-muted-foreground text-sm font-semibold uppercase tracking-wider mb-2">System Uptime</p>
+                                    <p className="text-2xl font-extrabold text-foreground font-mono">47d 12h 33m</p>
+                                    <p className="text-emerald-500 text-xs mt-2 font-medium">Since last maintenance</p>
+                                </Card>
+                                <Card className="p-6">
+                                    <p className="text-muted-foreground text-sm font-semibold uppercase tracking-wider mb-2">Node Health</p>
+                                    <p className="text-2xl font-extrabold text-foreground">3 / 3 Online</p>
+                                    <p className="text-emerald-500 text-xs mt-2 font-medium flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> All nodes operational</p>
+                                </Card>
+                                <Card className="p-6">
+                                    <p className="text-muted-foreground text-sm font-semibold uppercase tracking-wider mb-2">Memory Usage</p>
+                                    <p className="text-2xl font-extrabold text-foreground">{(serversArray.length * 2.4).toFixed(1)} / 128 GB</p>
+                                    <div className="mt-3 h-2 rounded-full bg-surface overflow-hidden border border-border">
+                                        <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${Math.min(100, (serversArray.length * 2.4 / 128) * 100)}%` }} />
+                                    </div>
+                                </Card>
+                            </div>
                         </div>
                     )}
 
@@ -402,13 +422,29 @@ const AdminPanel = () => {
                             <p className="text-muted-foreground text-sm mb-8">Execute fun or purely chaotic functions across the hosting backend. (Currently non-functional mock buttons).</p>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <button className="p-4 bg-surface border border-accent/20 rounded-2xl text-left hover:bg-accent/10 transition-colors group">
+                                <button onClick={() => Toast.error('Sent SIGKILL to all wings — just kidding!')} className="p-4 bg-surface border border-accent/20 rounded-lg text-left hover:bg-accent/10 transition-colors group">
                                     <h3 className="font-bold text-foreground group-hover:text-accent transition-colors flex items-center gap-2 mb-1"><Power size={18} /> Crash All Servers</h3>
                                     <p className="text-xs text-muted-foreground">Immediately kill -9 all running Pterodactyl wings.</p>
                                 </button>
-                                <button className="p-4 bg-surface border border-accent/20 rounded-2xl text-left hover:bg-accent/10 transition-colors group">
+                                <button onClick={() => Toast.success('🎵 Never gonna give you up... (simulated)')} className="p-4 bg-surface border border-accent/20 rounded-lg text-left hover:bg-accent/10 transition-colors group">
                                     <h3 className="font-bold text-foreground group-hover:text-accent transition-colors flex items-center gap-2 mb-1"><Users size={18} /> Rickroll All Users</h3>
                                     <p className="text-xs text-muted-foreground">Force audio playback of Never Gonna Give You Up.</p>
+                                </button>
+                                <button onClick={() => Toast.success('Fake maintenance banner deployed!')} className="p-4 bg-surface border border-accent/20 rounded-lg text-left hover:bg-accent/10 transition-colors group">
+                                    <h3 className="font-bold text-foreground group-hover:text-accent transition-colors flex items-center gap-2 mb-1"><AlertTriangle size={18} /> Fake Maintenance</h3>
+                                    <p className="text-xs text-muted-foreground">Display a fake "Urgent Maintenance" banner to all users.</p>
+                                </button>
+                                <button onClick={() => Toast.success('All server names randomized!')} className="p-4 bg-surface border border-accent/20 rounded-lg text-left hover:bg-accent/10 transition-colors group">
+                                    <h3 className="font-bold text-foreground group-hover:text-accent transition-colors flex items-center gap-2 mb-1"><Server size={18} /> Shuffle Server Names</h3>
+                                    <p className="text-xs text-muted-foreground">Randomly reassign all server display names across users.</p>
+                                </button>
+                                <button onClick={() => Toast.success('Theme set to Comic Sans everywhere!')} className="p-4 bg-surface border border-accent/20 rounded-lg text-left hover:bg-accent/10 transition-colors group">
+                                    <h3 className="font-bold text-foreground group-hover:text-accent transition-colors flex items-center gap-2 mb-1"><FileText size={18} /> Comic Sans Mode</h3>
+                                    <p className="text-xs text-muted-foreground">Force Comic Sans MS as the only font across the entire panel.</p>
+                                </button>
+                                <button onClick={() => Toast.success('Dashboard inverted for all users!')} className="p-4 bg-surface border border-accent/20 rounded-lg text-left hover:bg-accent/10 transition-colors group">
+                                    <h3 className="font-bold text-foreground group-hover:text-accent transition-colors flex items-center gap-2 mb-1"><Activity size={18} /> Invert Dashboard</h3>
+                                    <p className="text-xs text-muted-foreground">Apply CSS transform: rotate(180deg) to the entire panel for everyone.</p>
                                 </button>
                             </div>
                         </Card>
@@ -473,7 +509,7 @@ const AdminPanel = () => {
                             initial={{ opacity: 0, scale: 0.95, y: 10 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                            className="bg-background w-full max-w-lg rounded-3xl border border-border shadow-2xl overflow-hidden flex flex-col"
+                            className="bg-background w-full max-w-lg rounded-xl border border-border shadow-2xl overflow-hidden flex flex-col"
                         >
                             <div className="flex justify-between items-center p-6 border-b border-border bg-surface">
                                 <h3 className="text-xl font-bold text-foreground flex items-center gap-2"><ShieldBan className="text-danger" /> Restrictions Console</h3>
@@ -541,7 +577,7 @@ const AdminPanel = () => {
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.95 }}
-                            className="bg-background w-full max-w-lg rounded-3xl border border-border shadow-2xl overflow-hidden flex flex-col"
+                            className="bg-background w-full max-w-lg rounded-xl border border-border shadow-2xl overflow-hidden flex flex-col"
                         >
                             <div className="flex justify-between items-center p-6 border-b border-border bg-surface">
                                 <h3 className="text-xl font-bold text-foreground">Deploy Global Server</h3>

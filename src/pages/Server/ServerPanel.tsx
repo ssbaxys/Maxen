@@ -73,12 +73,34 @@ const ServerPanel = () => {
     const [wipeServer, setWipeServer] = useState(false);
     const [consoleInput, setConsoleInput] = useState("");
     const [serverNameInput, setServerNameInput] = useState("");
-    const [allocations, setAllocations] = useState<any[]>([]);
-    const [databases, setDatabases] = useState<any[]>([]);
-    const [files, setFiles] = useState<any[]>([]);
-    const [schedules, setSchedules] = useState<any[]>([]);
-    const [users, setUsers] = useState<any[]>([]);
-    const [backups, setBackups] = useState<any[]>([]);
+    const [allocations, setAllocations] = useState<any[]>([
+        { ip: '192.168.1.100', port: 25565, isDefault: true, alias: 'play.maxen.gg' },
+        { ip: '192.168.1.100', port: 25566, isDefault: false, alias: '' },
+    ]);
+    const [databases, setDatabases] = useState<any[]>([
+        { name: 'main_db', host: 'db2.hoxen.one', username: 'u482_db', size: '14.2 MB' },
+    ]);
+    const [files, setFiles] = useState<any[]>([
+        { name: 'plugins', type: 'folder', size: '—', date: '2025-12-01' },
+        { name: 'world', type: 'folder', size: '—', date: '2025-12-15' },
+        { name: 'logs', type: 'folder', size: '—', date: '2026-01-10' },
+        { name: 'server.jar', type: 'file', size: '42.1 MB', date: '2026-02-20' },
+        { name: 'server.properties', type: 'file', size: '1.2 KB', date: '2026-03-01' },
+        { name: 'bukkit.yml', type: 'file', size: '3.4 KB', date: '2026-01-05' },
+        { name: 'spigot.yml', type: 'file', size: '2.8 KB', date: '2026-01-05' },
+        { name: 'eula.txt', type: 'file', size: '0.1 KB', date: '2025-11-20' },
+    ]);
+    const [schedules, setSchedules] = useState<any[]>([
+        { name: 'Auto Restart', cron: '0 */6 * * *', next: 'In 2 hours' },
+        { name: 'Daily Backup', cron: '0 4 * * *', next: 'Tomorrow 04:00' },
+    ]);
+    const [users, setUsers] = useState<any[]>([
+        { email: 'admin@maxen.gg', perms: ['control.console', 'control.start', 'control.stop'], '2fa': true },
+        { email: 'builder@maxen.gg', perms: ['file.read', 'file.write'], '2fa': false },
+    ]);
+    const [backups, setBackups] = useState<any[]>([
+        { name: 'backup-2026-03-10', size: '128 MB', date: 'Mar 10, 2026 04:00 AM', status: 'Completed' },
+    ]);
 
     // Refs for simulation intervals
     const simulatorRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -505,38 +527,38 @@ const ServerPanel = () => {
 
                 {activeTab === 'settings' && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-                        <div className="bg-surface border border-border shadow-sm p-8 rounded-3xl">
-                            <h2 className="text-2xl font-bold text-white mb-6">Settings</h2>
+                        <div className="bg-surface border border-border shadow-sm p-8 rounded-lg">
+                            <h2 className="text-2xl font-bold text-foreground mb-6">Settings</h2>
 
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                                 <div className="space-y-6">
                                     <div>
-                                        <h3 className="text-lg font-bold text-white mb-4">SFTP Details</h3>
+                                        <h3 className="text-lg font-bold text-foreground mb-4">SFTP Details</h3>
                                         <div className="space-y-4">
-                                            <div className="bg-surface p-4 rounded-xl border border-white/5">
-                                                <p className="text-xs text-textMuted uppercase tracking-wider font-semibold mb-1">Server Address</p>
-                                                <div className="font-mono text-white select-all text-sm">sftp://{serverData?.node || 'pl1.hoxen.one'}:{serverData?.settings?.sftpPort || 2022}</div>
+                                            <div className="bg-surface p-4 rounded-lg border border-border">
+                                                <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Server Address</p>
+                                                <div className="font-mono text-foreground select-all text-sm">sftp://{serverData?.node || 'pl1.hoxen.one'}:{serverData?.settings?.sftpPort || 2022}</div>
                                             </div>
-                                            <div className="bg-surface p-4 rounded-xl border border-white/5">
-                                                <p className="text-xs text-textMuted uppercase tracking-wider font-semibold mb-1">Username</p>
-                                                <div className="font-mono text-white select-all text-sm">{user?.email?.split('@')[0] || 'admin'}.{id?.substring(0, 8)}</div>
+                                            <div className="bg-surface p-4 rounded-lg border border-border">
+                                                <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Username</p>
+                                                <div className="font-mono text-foreground select-all text-sm">{user?.email?.split('@')[0] || 'admin'}.{id?.substring(0, 8)}</div>
                                             </div>
-                                            <p className="text-sm text-textMuted">Your SFTP password is the same as the password you use to access this panel.</p>
-                                            <button onClick={() => toast("SFTP connection attempted", { icon: "🔌" })} className="bg-primary hover:bg-primary-hover text-white px-6 py-2.5 rounded-xl font-medium transition-colors shadow-lg shadow-primary/20 w-full md:w-auto">Launch SFTP</button>
+                                            <p className="text-sm text-muted-foreground">Your SFTP password is the same as the password you use to access this panel.</p>
+                                            <Button onClick={() => toast("SFTP connection attempted", { icon: "🔌" })} className="w-full md:w-auto">Launch SFTP</Button>
                                         </div>
                                     </div>
 
                                     <div>
-                                        <h3 className="text-lg font-bold text-white mb-4">Change Server Details</h3>
+                                        <h3 className="text-lg font-bold text-foreground mb-4">Change Server Details</h3>
                                         <div className="space-y-4">
-                                            <div className="bg-surface p-4 rounded-xl border border-white/5">
-                                                <p className="text-xs text-textMuted uppercase tracking-wider font-semibold mb-2">Server Name</p>
+                                            <div className="bg-surface p-4 rounded-lg border border-border">
+                                                <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-2">Server Name</p>
                                                 <div className="flex gap-2">
                                                     <input
                                                         type="text"
                                                         value={serverNameInput}
                                                         onChange={(e) => setServerNameInput(e.target.value)}
-                                                        className="w-full bg-black/30 border border-white/10 rounded-lg py-2 px-3 outline-none focus:border-primary text-white text-sm"
+                                                        className="w-full bg-background border border-border rounded-lg py-2 px-3 outline-none focus:border-primary text-foreground text-sm"
                                                     />
                                                     <button
                                                         onClick={async () => {
@@ -546,7 +568,7 @@ const ServerPanel = () => {
                                                             toast.success("Server renamed successfully.");
                                                         }}
                                                         disabled={serverNameInput === serverData?.name || !serverNameInput.trim()}
-                                                        className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm whitespace-nowrap disabled:opacity-50"
+                                                        className="bg-surface hover:bg-surface-hover text-foreground border border-border px-4 py-2 rounded-lg font-medium transition-colors text-sm whitespace-nowrap disabled:opacity-50"
                                                     >
                                                         Save
                                                     </button>
@@ -558,24 +580,24 @@ const ServerPanel = () => {
 
                                 <div className="space-y-6">
                                     <div>
-                                        <h3 className="text-lg font-bold text-white mb-4">Debug Information</h3>
+                                        <h3 className="text-lg font-bold text-foreground mb-4">Debug Information</h3>
                                         <div className="space-y-4">
-                                            <div className="bg-surface p-4 rounded-xl border border-white/5">
-                                                <p className="text-xs text-textMuted uppercase tracking-wider font-semibold mb-1">Node</p>
-                                                <p className="text-white font-medium text-sm">{serverData?.node || 'pl1.hoxen.one'}</p>
+                                            <div className="bg-surface p-4 rounded-lg border border-border">
+                                                <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Node</p>
+                                                <p className="text-foreground font-medium text-sm">{serverData?.node || 'pl1.hoxen.one'}</p>
                                             </div>
-                                            <div className="bg-surface p-4 rounded-xl border border-white/5 flex flex-col">
-                                                <p className="text-xs text-textMuted uppercase tracking-wider font-semibold mb-1">Server ID / UUID</p>
-                                                <p className="text-white font-mono text-xs overflow-hidden text-ellipsis select-all">{id}</p>
+                                            <div className="bg-surface p-4 rounded-lg border border-border flex flex-col">
+                                                <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Server ID / UUID</p>
+                                                <p className="text-foreground font-mono text-xs overflow-hidden text-ellipsis select-all">{id}</p>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div>
-                                        <h3 className="text-lg font-bold text-white mb-4">Danger Zone</h3>
+                                        <h3 className="text-lg font-bold text-foreground mb-4">Danger Zone</h3>
                                         <div className="bg-danger/10 p-6 rounded-xl border border-danger/20">
                                             <h4 className="font-bold text-danger mb-2">Reinstall Server</h4>
-                                            <p className="text-sm text-red-100/70 mb-4">Reinstalling your server will stop it, and then re-run the installation script that initially set it up. <strong className="text-white">Some files may be deleted or modified during this process, please back up your data before continuing.</strong></p>
+                                            <p className="text-sm text-muted-foreground mb-4">Reinstalling your server will stop it, and then re-run the installation script that initially set it up. <strong className="text-foreground">Some files may be deleted or modified during this process, please back up your data before continuing.</strong></p>
                                             <button
                                                 onClick={() => {
                                                     if (window.confirm("Are you SURE you want to reinstall? This might delete data.")) {
@@ -584,7 +606,7 @@ const ServerPanel = () => {
                                                         serverService.pushServerLog(id!, "System Reinstall Command Issued.", 'WARN');
                                                     }
                                                 }}
-                                                className="bg-danger hover:bg-red-500 text-white font-bold py-2.5 px-6 rounded-xl transition-colors shadow-lg shadow-danger/20"
+                                                className="bg-danger hover:bg-red-500 text-white font-bold py-2.5 px-6 rounded-lg transition-colors"
                                             >
                                                 Reinstall Server
                                             </button>
@@ -597,7 +619,7 @@ const ServerPanel = () => {
                 )}
 
                 {activeTab === 'versions' && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-surface border border-border shadow-sm p-6 md:p-8 rounded-3xl min-h-[600px]">
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-surface border border-border shadow-sm p-6 md:p-8 rounded-lg min-h-[600px]">
 
                         <AnimatePresence mode="wait">
                             {!selectedSoftware && !selectedVersion && (
@@ -609,19 +631,19 @@ const ServerPanel = () => {
                                     transition={{ duration: 0.2 }}
                                 >
                                     <div className="mb-8">
-                                        <h2 className="text-2xl font-bold text-white mb-2">Software Versions Installer</h2>
-                                        <p className="text-textMuted">Install or update your server software from our extensive pre-configured list.</p>
+                                        <h2 className="text-2xl font-bold text-foreground mb-2">Software Versions Installer</h2>
+                                        <p className="text-muted-foreground">Install or update your server software from our extensive pre-configured list.</p>
                                     </div>
                                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                         {Object.keys(versionsData).map(software => (
                                             <button
                                                 key={software}
                                                 onClick={() => setSelectedSoftware(software)}
-                                                className="bg-surface border border-white/5 hover:border-primary/50 hover:bg-primary/5 p-6 rounded-2xl text-left transition-all group relative overflow-hidden"
+                                                className="bg-surface border border-border hover:border-primary/50 hover:bg-primary/5 p-6 rounded-lg text-left transition-all group relative overflow-hidden"
                                             >
                                                 <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                <h3 className="text-lg font-bold text-white group-hover:text-primary transition-colors relative z-10">{software}</h3>
-                                                <p className="text-sm text-textMuted mt-1 relative z-10">{versionsData[software as keyof typeof versionsData].length} Game Versions</p>
+                                                <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors relative z-10">{software}</h3>
+                                                <p className="text-sm text-muted-foreground mt-1 relative z-10">{versionsData[software as keyof typeof versionsData].length} Game Versions</p>
                                             </button>
                                         ))}
                                     </div>
@@ -637,13 +659,13 @@ const ServerPanel = () => {
                                     transition={{ duration: 0.2 }}
                                 >
                                     <div className="flex items-center gap-4 mb-8">
-                                        <button onClick={() => setSelectedSoftware(null)} className="text-textMuted hover:text-white p-2.5 bg-surface rounded-xl transition-colors border border-white/5 hover:border-white/20">
+                                        <button onClick={() => setSelectedSoftware(null)} className="text-muted-foreground hover:text-foreground p-2.5 bg-surface rounded-lg transition-colors border border-border hover:border-foreground/20">
                                             <span className="sr-only">Go Back</span>
                                             ←
                                         </button>
                                         <div>
-                                            <h2 className="text-2xl font-bold text-white">{selectedSoftware}</h2>
-                                            <p className="text-sm text-textMuted">Select a game version to continue</p>
+                                            <h2 className="text-2xl font-bold text-foreground">{selectedSoftware}</h2>
+                                            <p className="text-sm text-muted-foreground">Select a game version to continue</p>
                                         </div>
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-4xl">
@@ -651,14 +673,14 @@ const ServerPanel = () => {
                                             <button
                                                 key={version}
                                                 onClick={() => setSelectedVersion(version)}
-                                                className="w-full bg-surface border border-white/5 hover:border-primary/30 p-4 rounded-xl flex items-center justify-between transition-colors group"
+                                                className="w-full bg-surface border border-border hover:border-primary/30 p-4 rounded-lg flex items-center justify-between transition-colors group"
                                             >
                                                 <div>
-                                                    <span className="text-lg font-bold text-white block text-left group-hover:text-primary transition-colors">{version}</span>
+                                                    <span className="text-lg font-bold text-foreground block text-left group-hover:text-primary transition-colors">{version}</span>
                                                 </div>
                                                 <div className="text-right flex flex-col items-end gap-1">
                                                     <span className="text-[10px] bg-secondary/10 text-secondary border border-secondary/20 px-2 py-0.5 rounded font-mono font-semibold uppercase tracking-widest">Release</span>
-                                                    <span className="text-xs text-textMuted">Latest build available</span>
+                                                    <span className="text-xs text-muted-foreground">Latest build available</span>
                                                 </div>
                                             </button>
                                         ))}
@@ -678,19 +700,19 @@ const ServerPanel = () => {
                                         <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/20 text-primary mb-6">
                                             <Download size={32} />
                                         </div>
-                                        <h2 className="text-3xl font-bold text-white mb-2">Install {selectedSoftware} <span className="text-primary">{selectedVersion}</span></h2>
-                                        <p className="text-textMuted">You are about to modify your server's core jar file.</p>
+                                        <h2 className="text-3xl font-bold text-foreground mb-2">Install {selectedSoftware} <span className="text-primary">{selectedVersion}</span></h2>
+                                        <p className="text-muted-foreground">You are about to modify your server's core jar file.</p>
                                     </div>
 
-                                    <div className="bg-surface border border-white/10 rounded-3xl p-8 relative overflow-hidden">
+                                    <div className="bg-surface border border-border rounded-lg p-8 relative overflow-hidden">
                                         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-accent" />
 
-                                        <div className="flex justify-between items-center py-4 border-b border-white/5 mb-6">
-                                            <span className="text-textMuted">Target Build</span>
-                                            <span className="font-mono text-sm font-bold text-white bg-white/5 px-3 py-1 rounded-lg border border-white/10">{generateBuildName()}</span>
+                                        <div className="flex justify-between items-center py-4 border-b border-border mb-6">
+                                            <span className="text-muted-foreground">Target Build</span>
+                                            <span className="font-mono text-sm font-bold text-foreground bg-surface px-3 py-1 rounded-lg border border-border">{generateBuildName()}</span>
                                         </div>
 
-                                        <div className="mb-8 p-5 bg-danger/10 border border-danger/20 rounded-2xl relative overflow-hidden group">
+                                        <div className="mb-8 p-5 bg-danger/10 border border-danger/20 rounded-lg relative overflow-hidden group">
                                             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                                                 <Skull size={64} className="text-danger" />
                                             </div>
@@ -702,7 +724,7 @@ const ServerPanel = () => {
                                                     className="mt-1 w-5 h-5 rounded border-danger/30 text-danger bg-black/50 focus:ring-danger focus:ring-offset-surface cursor-pointer"
                                                 />
                                                 <div className="flex-1">
-                                                    <span className="text-white font-bold block mb-1 text-lg">Wipe Server Files</span>
+                                                    <span className="text-foreground font-bold block mb-1 text-lg">Wipe Server Files</span>
                                                     <span className="text-sm text-red-200/80 block leading-relaxed">Checking this box will completely format your server directory, deleting world data, plugins, and configurations. This cannot be undone.</span>
                                                 </div>
                                             </label>
@@ -711,7 +733,7 @@ const ServerPanel = () => {
                                         <div className="flex gap-4">
                                             <button
                                                 onClick={() => setSelectedVersion(null)}
-                                                className="flex-1 bg-surface hover:bg-white/5 border border-white/10 text-white font-bold py-4 rounded-xl transition-all"
+                                                className="flex-1 bg-surface hover:bg-surface-hover border border-border text-foreground font-bold py-4 rounded-lg transition-all"
                                             >
                                                 Cancel
                                             </button>
@@ -734,7 +756,7 @@ const ServerPanel = () => {
                                                         setActiveTab('console'); // Go back to console to watch it boot
                                                     }, 2000);
                                                 }}
-                                                className="flex-[2] bg-primary hover:bg-primary-hover text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/30 transition-all text-lg flex justify-center items-center gap-2">
+                                                className="flex-[2] bg-primary hover:bg-primary-hover text-white font-bold py-4 rounded-lg transition-all text-lg flex justify-center items-center gap-2">
                                                 <Download size={20} />
                                                 Start Installation
                                             </button>
@@ -1039,16 +1061,16 @@ const ServerPanel = () => {
                 )}
 
                 {activeTab === 'firewall' && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-surface border border-border shadow-sm p-6 rounded-3xl border border-danger/20">
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-surface border border-danger/20 shadow-sm p-6 rounded-lg">
                         <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-2xl font-bold text-white flex items-center gap-2"><ShieldAlert className="text-danger" /> Firewall</h2>
-                            <button onClick={() => toast.success('Rule modal opened')} className="flex items-center gap-2 bg-danger hover:bg-red-500 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-lg shadow-danger/20">
+                            <h2 className="text-2xl font-bold text-foreground flex items-center gap-2"><ShieldAlert className="text-danger" /> Firewall</h2>
+                            <Button variant="danger" onClick={() => toast.success('Rule modal opened')} className="gap-2">
                                 <Plus size={16} /> Add Rule
-                            </button>
+                            </Button>
                         </div>
-                        <div className="text-center py-12 text-textMuted">
+                        <div className="text-center py-12 text-muted-foreground">
                             <ShieldAlert className="w-12 h-12 text-danger/30 mx-auto mb-4" />
-                            <h3 className="text-lg font-semibold text-white mb-2">No custom rules active</h3>
+                            <h3 className="text-lg font-semibold text-foreground mb-2">No custom rules active</h3>
                             <p className="text-sm">By default, all outgoing traffic is allowed and incoming is blocked except for your active allocations.</p>
                         </div>
                     </motion.div>
