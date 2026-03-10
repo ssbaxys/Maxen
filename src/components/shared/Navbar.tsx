@@ -39,9 +39,9 @@ const Header = () => {
     const displayNick = visualNick || user?.email?.split('@')[0] || 'User';
 
     return (
-        <header className="sticky top-0 z-50 glass-panel border-b border-border py-3 px-4 md:px-8 flex items-center justify-between">
+        <header className="sticky top-0 z-50 bg-background border-b border-border py-3 px-4 md:px-8 flex items-center justify-between">
             <Link to="/" className="flex items-center gap-3 group">
-                <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center transform group-hover:scale-105 transition-all shadow-glow-sm">
+                <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center transform group-hover:scale-105 transition-all shadow-sm">
                     <span className="font-bold text-primary-foreground text-lg">M</span>
                 </div>
                 <span className="text-xl font-bold tracking-tight text-foreground transition-colors group-hover:text-primary">Maxen</span>
@@ -72,7 +72,7 @@ const Header = () => {
                                     animate={{ opacity: 1, scale: 1, y: 0 }}
                                     exit={{ opacity: 0, scale: 0.95, y: 10 }}
                                     transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                                    className="absolute right-0 mt-2 w-72 glass-card rounded-xl shadow-glass-lg overflow-hidden py-1 border border-border"
+                                    className="absolute right-0 mt-2 w-72 bg-surface rounded-xl shadow-lg overflow-hidden py-1 border border-border"
                                 >
                                     <div className="px-4 py-3 border-b border-border bg-surface-hover/30">
                                         <p className="font-medium text-foreground">{displayNick}</p>

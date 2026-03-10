@@ -298,7 +298,7 @@ const ServerPanel = () => {
 
             {/* Sidebar Desktop */}
             <div className="w-56 flex-shrink-0 hidden md:flex flex-col gap-2 relative">
-                <div className="glass-panel p-4 rounded-3xl sticky top-24">
+                <div className="bg-surface border border-border shadow-sm p-4 rounded-3xl sticky top-24">
                     <div className="mb-6 px-2">
                         <Link to="/dashboard" className="text-xs text-textMuted hover:text-white transition-colors block mb-4">← Back to Servers</Link>
                         {isLoading ? (
@@ -340,7 +340,7 @@ const ServerPanel = () => {
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-xl whitespace-nowrap text-sm font-medium transition-all ${activeTab === tab.id ? 'bg-primary text-white' : 'glass-panel text-textMuted'
+                            className={`flex items-center gap-2 px-4 py-2 rounded-xl whitespace-nowrap text-sm font-medium transition-all ${activeTab === tab.id ? 'bg-primary text-white' : 'bg-surface border border-border shadow-sm text-textMuted'
                                 }`}
                         >
                             <tab.icon size={16} />
@@ -353,7 +353,7 @@ const ServerPanel = () => {
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
 
                         {/* Server Controls */}
-                        <div className="glass-panel p-4 rounded-2xl flex flex-wrap gap-3">
+                        <div className="bg-surface border border-border shadow-sm p-4 rounded-2xl flex flex-wrap gap-3">
                             <button onClick={handleStart} disabled={isLoading || serverData?.status !== 'offline'} className="flex-1 min-w-[120px] bg-secondary hover:bg-emerald-400 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-secondary/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                                 <Play size={18} /> Start
                             </button>
@@ -373,7 +373,7 @@ const ServerPanel = () => {
                         </div>
 
                         {/* Terminal Window */}
-                        <div className="glass-panel rounded-2xl overflow-hidden border border-white/10 shadow-2xl flex flex-col h-[400px]">
+                        <div className="bg-surface border border-border shadow-sm rounded-2xl overflow-hidden border border-white/10 shadow-2xl flex flex-col h-[400px]">
                             <div className="bg-surface/80 px-4 py-2 border-b border-white/5 flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <div className="flex gap-1.5"><div className="w-3 h-3 rounded-full bg-danger" /><div className="w-3 h-3 rounded-full bg-accent" /><div className="w-3 h-3 rounded-full bg-secondary" /></div>
@@ -411,7 +411,7 @@ const ServerPanel = () => {
 
                         {/* Graphs */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            <div className="glass-panel p-5 rounded-2xl relative overflow-hidden group">
+                            <div className="bg-surface border border-border shadow-sm p-5 rounded-2xl relative overflow-hidden group">
                                 <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                                 <div className="flex items-center justify-between mb-2">
                                     <div className="flex items-center gap-2 text-white font-semibold"><Cpu size={16} className="text-primary" /> CPU Usage</div>
@@ -426,7 +426,7 @@ const ServerPanel = () => {
                                     </ResponsiveContainer>
                                 </div>
                             </div>
-                            <div className="glass-panel p-5 rounded-2xl relative overflow-hidden group">
+                            <div className="bg-surface border border-border shadow-sm p-5 rounded-2xl relative overflow-hidden group">
                                 <div className="absolute inset-0 bg-accent/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                                 <div className="flex items-center justify-between mb-2">
                                     <div className="flex items-center gap-2 text-white font-semibold"><MemoryStick size={16} className="text-accent" /> Memory Usage</div>
@@ -441,7 +441,7 @@ const ServerPanel = () => {
                                     </ResponsiveContainer>
                                 </div>
                             </div>
-                            <div className="glass-panel p-5 rounded-2xl relative overflow-hidden group">
+                            <div className="bg-surface border border-border shadow-sm p-5 rounded-2xl relative overflow-hidden group">
                                 <div className="absolute inset-0 bg-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                                 <div className="flex items-center justify-between mb-2">
                                     <div className="flex items-center gap-2 text-white font-semibold"><Activity size={16} className="text-secondary" /> Network (In/Out)</div>
@@ -468,7 +468,7 @@ const ServerPanel = () => {
 
                 {activeTab === 'settings' && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-                        <div className="glass-panel p-8 rounded-3xl">
+                        <div className="bg-surface border border-border shadow-sm p-8 rounded-3xl">
                             <h2 className="text-2xl font-bold text-white mb-6">Settings</h2>
 
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -560,7 +560,7 @@ const ServerPanel = () => {
                 )}
 
                 {activeTab === 'versions' && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-panel p-6 md:p-8 rounded-3xl min-h-[600px]">
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-surface border border-border shadow-sm p-6 md:p-8 rounded-3xl min-h-[600px]">
 
                         <AnimatePresence mode="wait">
                             {!selectedSoftware && !selectedVersion && (
@@ -710,7 +710,7 @@ const ServerPanel = () => {
                 )}
 
                 {activeTab === 'files' && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-panel p-6 rounded-3xl">
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-surface border border-border shadow-sm p-6 rounded-3xl">
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                             <div>
                                 <h2 className="text-2xl font-bold text-white mb-1">File Manager</h2>
@@ -759,7 +759,7 @@ const ServerPanel = () => {
                 )}
 
                 {activeTab === 'databases' && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-panel p-6 rounded-3xl">
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-surface border border-border shadow-sm p-6 rounded-3xl">
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-2xl font-bold text-white">Databases</h2>
                             <button onClick={() => {
@@ -814,7 +814,7 @@ const ServerPanel = () => {
                 )}
 
                 {activeTab === 'schedules' && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-panel p-6 rounded-3xl">
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-surface border border-border shadow-sm p-6 rounded-3xl">
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-2xl font-bold text-white">Schedules & Cron</h2>
                             <button onClick={() => toast('Schedule creation modal opened', { icon: '📝' })} className="flex items-center gap-2 bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-lg shadow-primary/20">
@@ -853,7 +853,7 @@ const ServerPanel = () => {
                 )}
 
                 {activeTab === 'users' && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-panel p-6 rounded-3xl">
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-surface border border-border shadow-sm p-6 rounded-3xl">
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-2xl font-bold text-white">Subusers</h2>
                             <button onClick={() => toast.success('Invite link copied to clipboard!')} className="flex items-center gap-2 bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-lg shadow-primary/20">
@@ -891,7 +891,7 @@ const ServerPanel = () => {
                 )}
 
                 {activeTab === 'backups' && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-panel p-6 rounded-3xl">
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-surface border border-border shadow-sm p-6 rounded-3xl">
                         <div className="flex justify-between items-center mb-6">
                             <div>
                                 <h2 className="text-2xl font-bold text-white mb-1">Backups</h2>
@@ -929,7 +929,7 @@ const ServerPanel = () => {
                 )}
 
                 {activeTab === 'network' && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-panel p-6 rounded-3xl">
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-surface border border-border shadow-sm p-6 rounded-3xl">
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-2xl font-bold text-white">Network Allocations</h2>
                             <button onClick={() => {
@@ -978,7 +978,7 @@ const ServerPanel = () => {
                 )}
 
                 {activeTab === 'firewall' && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-panel p-6 rounded-3xl border border-danger/20">
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-surface border border-border shadow-sm p-6 rounded-3xl border border-danger/20">
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-2xl font-bold text-white flex items-center gap-2"><ShieldAlert className="text-danger" /> Firewall</h2>
                             <button onClick={() => toast.success('Rule modal opened')} className="flex items-center gap-2 bg-danger hover:bg-red-500 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-lg shadow-danger/20">

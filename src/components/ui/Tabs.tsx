@@ -50,7 +50,7 @@ const TabsList = React.forwardRef<HTMLDivElement, TabsListProps>(
         <div
             ref={ref}
             className={cn(
-                "inline-flex h-10 items-center justify-center rounded-lg bg-surface-hover/50 p-1 text-muted-foreground",
+                "inline-flex h-10 items-center justify-center rounded-lg bg-surface-hover/30 p-1 text-muted-foreground",
                 className
             )}
             {...props}
@@ -87,7 +87,7 @@ const TabsTrigger = React.forwardRef<HTMLButtonElement, TabsTriggerProps>(
                 {isActive && (
                     <motion.div
                         layoutId="active-tab"
-                        className="absolute inset-0 rounded-md bg-surface shadow-sm ring-1 ring-white/10"
+                        className="absolute inset-0 rounded-md bg-surface shadow-sm border border-border"
                         transition={{ type: "spring", stiffness: 400, damping: 30 }}
                     />
                 )}

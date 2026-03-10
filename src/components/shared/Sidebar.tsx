@@ -40,7 +40,7 @@ const Sidebar = () => {
     ];
 
     return (
-        <aside className="w-64 flex-shrink-0 border-r border-border glass-panel hidden md:flex flex-col relative z-20 h-[calc(100vh-61px)] sticky top-[61px] overflow-visible">
+        <aside className="w-64 flex-shrink-0 border-r border-border bg-background hidden md:flex flex-col relative z-20 h-[calc(100vh-61px)] sticky top-[61px] overflow-visible">
             <nav className="p-4 space-y-1 flex-1 overflow-y-auto w-full scrollbar-hidden">
                 {links.map(link => {
                     const isActive = location.pathname.startsWith(link.path);
@@ -51,7 +51,7 @@ const Sidebar = () => {
                             className={cn(
                                 "flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm w-full",
                                 isActive
-                                    ? "bg-primary/10 text-primary font-bold border border-primary/20 shadow-glow-sm"
+                                    ? "bg-primary/10 text-primary font-bold border border-primary/20 shadow-sm"
                                     : "text-muted-foreground hover:bg-surface hover:text-foreground border border-transparent"
                             )}
                         >

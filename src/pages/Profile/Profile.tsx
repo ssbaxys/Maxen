@@ -140,7 +140,7 @@ const Profile = () => {
                                 <KeyRound className="text-primary w-5 h-5" />
                                 <h3 className="text-lg font-bold text-foreground">Authentication Providers</h3>
                             </div>
-                            <Button variant="glass" size="sm" className="h-8 gap-2"><Plus size={14} /> Link Provider</Button>
+                            <Button variant="outline" size="sm" className="h-8 gap-2"><Plus size={14} /> Link Provider</Button>
                         </div>
 
                         <div className="grid gap-3">

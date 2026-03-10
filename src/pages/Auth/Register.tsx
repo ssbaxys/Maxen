@@ -86,7 +86,7 @@ const Register = () => {
         <div className="flex-1 flex items-center justify-center p-4 relative overflow-hidden">
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-secondary/20 blur-[120px] rounded-full pointer-events-none" />
 
-            <div className="glass-panel w-full max-w-md p-8 rounded-3xl relative z-10 transition-all duration-300">
+            <div className="bg-surface border border-border w-full max-w-md p-8 rounded-3xl relative z-10 transition-all duration-300">
 
                 <AnimatePresence mode="wait">
                     {step === 1 && (
@@ -102,7 +102,7 @@ const Register = () => {
 
                             {error && <div className="bg-danger/20 text-red-300 p-3 rounded-xl mb-4 text-sm border border-danger/20">{error}</div>}
 
-                            <div className="flex flex-col items-center justify-center mb-6 p-4 glass-panel rounded-xl">
+                            <div className="flex flex-col items-center justify-center mb-6 p-4 bg-surface border border-border rounded-xl">
                                 <div className="flex items-center gap-2 mb-3 text-textMuted text-sm font-medium">
                                     <ShieldCheck size={16} className="text-secondary" /> Verify you are human
                                 </div>

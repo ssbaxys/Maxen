@@ -43,10 +43,9 @@ export default {
                 mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
             },
             animation: {
-                'fade-in': 'fadeIn 0.3s ease-out',
-                'slide-up': 'slideUp 0.4s ease-out forwards',
-                'scale-in': 'scaleIn 0.2s ease-out',
-                'fade-in-up': 'fadeInUp 0.4s ease-out forwards',
+                'fade-in': 'fadeIn 0.2s ease-out',
+                'slide-up': 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                'scale-in': 'scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
             },
             keyframes: {
                 fadeIn: {
@@ -54,23 +53,19 @@ export default {
                     '100%': { opacity: '1' },
                 },
                 slideUp: {
-                    '0%': { opacity: '0', transform: 'translateY(10px)' },
+                    '0%': { opacity: '0', transform: 'translateY(8px)' },
                     '100%': { opacity: '1', transform: 'translateY(0)' },
                 },
                 scaleIn: {
-                    '0%': { opacity: '0', transform: 'scale(0.95)' },
+                    '0%': { opacity: '0', transform: 'scale(0.97)' },
                     '100%': { opacity: '1', transform: 'scale(1)' },
-                },
-                fadeInUp: {
-                    '0%': { opacity: '0', transform: 'translateY(20px)' },
-                    '100%': { opacity: '1', transform: 'translateY(0)' },
                 }
             },
             boxShadow: {
-                'glass': '0 4px 30px rgba(0, 0, 0, 0.1)',
-                'glass-lg': '0 8px 32px 0 rgba(0, 0, 0, 0.36)',
-                glow: '0 0 20px rgba(99, 102, 241, 0.4)',
-                'glow-sm': '0 0 10px rgba(99, 102, 241, 0.2)',
+                'sm': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                DEFAULT: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1)',
+                'md': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)',
+                'lg': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)',
             }
         },
     },

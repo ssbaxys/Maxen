@@ -152,7 +152,7 @@ const AdminPanel = () => {
         <div className="flex-1 flex w-full max-w-7xl mx-auto px-4 md:px-8 py-8 h-full">
             {/* Sidebar */}
             <div className="w-64 flex-shrink-0 mr-8 hidden md:block">
-                <div className="glass-panel p-4 rounded-3xl sticky top-24">
+                <div className="bg-surface border border-border p-4 rounded-3xl sticky top-24">
                     <h2 className="text-xs font-bold text-textMuted uppercase tracking-widest px-4 mb-4">Admin Dashboard</h2>
                     <nav className="space-y-1">
                         {tabs.map(tab => {
@@ -185,8 +185,7 @@ const AdminPanel = () => {
                         <button
                             key={tab.id}
                             onClick={() => { setActiveTab(tab.id); setSearch(''); }}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-xl whitespace-nowrap text-sm font-medium transition-all ${activeTab === tab.id ? 'bg-primary text-white' : 'glass-panel text-textMuted'
-                                }`}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-xl whitespace-nowrap text-sm font-medium transition-all ${activeTab === tab.id ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-surface hover:bg-surface-hover text-muted-foreground border border-transparent'}`}
                         >
                             <tab.icon size={16} />
                             {tab.label}

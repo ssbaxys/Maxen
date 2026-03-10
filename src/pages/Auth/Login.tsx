@@ -164,7 +164,7 @@ const Login = () => {
         <div className="flex-1 flex items-center justify-center p-4 relative overflow-hidden">
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/20 blur-[120px] rounded-full pointer-events-none" />
 
-            <div className="glass-panel w-full max-w-md p-8 rounded-3xl relative z-10 animate-slide-up">
+            <div className="bg-surface border border-border w-full max-w-md p-8 rounded-3xl relative z-10 animate-slide-up">
                 <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-textMuted mb-2 text-center">Welcome Back</h2>
                 <p className="text-textMuted text-center mb-8">Access your premium Maxen servers</p>
 

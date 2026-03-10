@@ -50,7 +50,7 @@ export const Dropdown = ({ trigger, triggerText = 'Options', items, align = 'lef
                         exit={{ opacity: 0, scale: 0.95, y: -5 }}
                         transition={{ duration: 0.15 }}
                         className={cn(
-                            "absolute z-50 mt-2 w-56 glass-card rounded-xl shadow-glass-lg py-1 border border-border outline-none",
+                            "absolute z-50 mt-2 w-56 bg-surface rounded-xl shadow-lg py-1 border border-border outline-none",
                             align === 'right' ? 'right-0 origin-top-right' : 'left-0 origin-top-left'
                         )}
                     >

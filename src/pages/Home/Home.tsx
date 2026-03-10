@@ -19,7 +19,7 @@ const Home = () => {
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.5 }}
                 >
-                    <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full glass-panel border border-primary/30 bg-primary/10 text-primary shadow-[0_0_30px_rgba(99,102,241,0.2)] mb-8">
+                    <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-surface border border-primary/30 text-primary shadow-sm mb-8">
                         <Cpu size={18} className="animate-pulse" />
                         <span className="text-xs md:text-sm font-bold tracking-widest uppercase">Powered by AMD Ryzen™ 9 9950X3D</span>
                     </div>
@@ -56,7 +56,7 @@ const Home = () => {
                         </Button>
                     </Link>
                     <Link to="/login">
-                        <Button variant="glass" size="lg" className="w-full sm:w-auto h-14 px-8 text-lg font-bold rounded-2xl">
+                        <Button variant="outline" size="lg" className="w-full sm:w-auto h-14 px-8 text-lg font-bold rounded-2xl">
                             Dashboard Login
                         </Button>
                     </Link>
@@ -120,21 +120,21 @@ const Home = () => {
 
                             <div className="space-y-6">
                                 <div className="flex gap-4 items-start">
-                                    <div className="p-3 glass-card rounded-xl text-primary"><Cpu size={24} /></div>
+                                    <div className="p-3 bg-surface border border-border rounded-xl text-primary"><Cpu size={24} /></div>
                                     <div>
                                         <h4 className="text-xl font-bold text-foreground">AMD Ryzen 9 9950X3D</h4>
                                         <p className="text-sm text-muted-foreground mt-1">16 Cores, 32 Threads, 144MB V-Cache powering through single-core monolithic threads effortlessly.</p>
                                     </div>
                                 </div>
                                 <div className="flex gap-4 items-start">
-                                    <div className="p-3 glass-card rounded-xl text-secondary"><HardDrive size={24} /></div>
+                                    <div className="p-3 bg-surface border border-border rounded-xl text-secondary"><HardDrive size={24} /></div>
                                     <div>
                                         <h4 className="text-xl font-bold text-foreground">PCIe Gen4 NVMe RAID</h4>
                                         <p className="text-sm text-muted-foreground mt-1">World-saving lag is a thing of the past with our extreme throughput SSD storage arrays.</p>
                                     </div>
                                 </div>
                                 <div className="flex gap-4 items-start">
-                                    <div className="p-3 glass-card rounded-xl text-emerald-500"><Server size={24} /></div>
+                                    <div className="p-3 bg-surface border border-border rounded-xl text-emerald-500"><Server size={24} /></div>
                                     <div>
                                         <h4 className="text-xl font-bold text-foreground">DDR5 ECC Memory</h4>
                                         <p className="text-sm text-muted-foreground mt-1">High frequency error-correcting RAM ensures absolute stability for long-running sessions.</p>
@@ -182,7 +182,7 @@ const Home = () => {
                                 <li className="flex items-center gap-3 text-foreground"><HardDrive className="text-primary w-5 h-5" /> <b>Unlimited</b> NVMe</li>
                                 <li className="flex items-center gap-3 text-foreground"><Cpu className="text-primary w-5 h-5" /> Standard CPU Priority</li>
                             </ul>
-                            <Link to="/register"><Button variant="glass" className="w-full h-12">Select Plan</Button></Link>
+                            <Link to="/register"><Button variant="outline" className="w-full h-12">Select Plan</Button></Link>
                         </Card>
                     </motion.div>
 
@@ -224,7 +224,7 @@ const Home = () => {
                                 <li className="flex items-center gap-3 text-foreground"><Cpu className="text-primary w-5 h-5" /> <b>Dedicated</b> Threads</li>
                                 <li className="flex items-center gap-3 text-foreground"><Shield className="text-primary w-5 h-5" /> Custom Network ACL</li>
                             </ul>
-                            <Link to="/register"><Button variant="glass" className="w-full h-12">Contact Sales</Button></Link>
+                            <Link to="/register"><Button variant="outline" className="w-full h-12">Contact Sales</Button></Link>
                         </Card>
                     </motion.div>
                 </div>
@@ -260,7 +260,7 @@ const Home = () => {
                     initial={{ scale: 0.95, opacity: 0 }}
                     whileInView={{ scale: 1, opacity: 1 }}
                     viewport={{ once: true }}
-                    className="glass-panel p-12 md:p-20 rounded-[3rem] border border-primary/20 bg-gradient-to-b from-primary/10 to-transparent relative overflow-hidden"
+                    className="bg-surface border border-border p-12 md:p-20 rounded-[3rem] relative overflow-hidden"
                 >
                     <div className="absolute inset-0 bg-primary/5 blur-3xl pointer-events-none" />
                     <h2 className="text-4xl md:text-6xl font-black text-foreground mb-6 relative z-10">Ready to elevate your game?</h2>
