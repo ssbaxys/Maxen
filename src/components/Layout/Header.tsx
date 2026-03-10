@@ -92,7 +92,7 @@ const Header = () => {
                                         </button>
 
                                         <div className="py-2 px-3">
-                                            <p className="text-xs font-semibold text-textMuted uppercase tracking-widest mb-2">Accessiblity</p>
+                                            <p className="text-xs font-semibold text-textMuted uppercase tracking-widest mb-2">Accessibility</p>
 
                                             <div className="flex items-center justify-between mb-3 text-sm">
                                                 <div className="flex items-center gap-2 text-textMuted"><Volume2 size={16} /> Volume</div>

@@ -11,8 +11,9 @@ import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
 import Dashboard from './pages/Dashboard/Dashboard';
 
-const ServerPanel = () => <div className="p-8">Server Panel</div>;
-const AdminPanel = () => <div className="p-8">Admin Panel</div>;
+import ServerPanel from './pages/Server/ServerPanel';
+import AdminPanel from './pages/Admin/AdminPanel';
+import { Toaster } from 'react-hot-toast';
 
 function App() {
     const { setUser, setVisualNick, setIsRoot, setLoading } = useAuthStore();
@@ -51,6 +52,14 @@ function App() {
                     <Route path="/admin/*" element={<AdminPanel />} />
                     <Route path="*" element={<Navigate to="/" />} />
                 </Routes>
+                <Toaster
+                    position="bottom-right"
+                    toastOptions={{
+                        className: '!bg-surface !text-white !border !border-white/10 !shadow-2xl',
+                        success: { iconTheme: { primary: '#10b981', secondary: '#fff' } },
+                        error: { iconTheme: { primary: '#ef4444', secondary: '#fff' } }
+                    }}
+                />
             </Layout>
         </Router>
     );

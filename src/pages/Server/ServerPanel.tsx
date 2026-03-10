@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { useParams, Link } from 'react-router-dom';
 import {
     Terminal, Folder, Database, Calendar, Users, Archive,
     Globe, Settings, Download, Play, RotateCcw,
-    Square, Skull, Cpu, MemoryStick, Activity, ShieldAlert
+    Square, Skull, Cpu, MemoryStick, Activity, ShieldAlert,
+    File, Plus, Trash2, Edit2, Lock, Clock
 } from 'lucide-react';
 import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -21,13 +23,37 @@ const mockLogs = [
     "[10:24:24] [Server thread/INFO]: Done (9.124s)! For help, type \"help\"",
 ];
 
-const mockStats = Array.from({ length: 20 }, (_, i) => ({
-    time: i,
-    cpu: Math.random() * 40 + 10,
-    ram: Math.random() * 500 + 1000,
-    netIn: Math.random() * 5 + 1,
-    netOut: Math.random() * 20 + 5,
-}));
+// Stats are now generated dynamically via state
+
+const mockFiles = [
+    { name: 'world', type: 'folder', size: '--', date: 'Oct 24, 2023 14:32' },
+    { name: 'plugins', type: 'folder', size: '--', date: 'Oct 24, 2023 14:30' },
+    { name: 'server.properties', type: 'file', size: '1.2 KB', date: 'Oct 24, 2023 14:35' },
+    { name: 'spigot.yml', type: 'file', size: '3.4 KB', date: 'Oct 24, 2023 14:35' },
+    { name: 'eula.txt', type: 'file', size: '158 B', date: 'Oct 24, 2023 14:31' },
+];
+
+const mockDatabases = [
+    { name: 's1_core', host: 'db1.hoxen.one', username: 'u1_r4nd0m', size: '45.2 MB' },
+];
+
+const mockSchedules = [
+    { name: 'Daily Backup', cron: '0 4 * * *', next: 'in 8 hours', status: 'Active' },
+    { name: 'Restart Server', cron: '0 0 * * *', next: 'in 4 hours', status: 'Active' },
+];
+
+const mockSubusers = [
+    { email: 'admin2@example.com', perms: ['control', 'console'], '2fa': true },
+];
+
+const mockBackups = [
+    { name: 'Backup_2023-10-24', size: '1.4 GB', date: 'Oct 24, 2023 04:00', status: 'Completed' },
+];
+
+const mockAllocations = [
+    { ip: '192.168.1.100', port: 25565, isDefault: true, alias: 'play.hoxen.one' },
+    { ip: '192.168.1.100', port: 8192, isDefault: false, alias: '' },
+];
 
 const versionsData = {
     Vanilla: ['1.21.1', '1.20.6', '1.19.4', '1.18.2', '1.17.1', '1.12.2'],
@@ -57,9 +83,21 @@ const ServerPanel = () => {
     const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
     const [wipeServer, setWipeServer] = useState(false);
 
+    // Deep Simulation States
+    const [serverState, setServerState] = useState<'offline' | 'starting' | 'running' | 'stopping'>('offline');
+    const [logs, setLogs] = useState<string[]>([]);
+    const [stats, setStats] = useState(Array.from({ length: 20 }, (_, i) => ({ time: i, cpu: 0, ram: 0, netIn: 0, netOut: 0 })));
+
+    const [files, setFiles] = useState(mockFiles);
+    const [databases, setDatabases] = useState(mockDatabases);
+    const [schedules, setSchedules] = useState(mockSchedules);
+    const [users, setUsers] = useState(mockSubusers);
+    const [backups, setBackups] = useState(mockBackups);
+    const [allocations, setAllocations] = useState(mockAllocations);
+
     // Shut down timer state
     const [isShuttingDown, setIsShuttingDown] = useState(false);
-    const [shutdownTime, setShutdownTime] = useState(10); // 10s graceful shutdown
+    const [shutdownTime, setShutdownTime] = useState(5);
 
     useEffect(() => {
         let timer: ReturnType<typeof setInterval>;
@@ -69,16 +107,75 @@ const ServerPanel = () => {
             }, 1000);
         } else if (isShuttingDown && shutdownTime === 0) {
             setIsShuttingDown(false);
-            setShutdownTime(10);
-            // mock stop logic
+            setShutdownTime(5);
+            setServerState('offline');
+            setLogs(prev => [...prev, "[10:25:05] [Server thread/INFO]: Server stopped."]);
+            toast.success('Server offline');
         }
         return () => clearInterval(timer);
     }, [isShuttingDown, shutdownTime]);
 
-    const handleGracefulStop = () => {
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setStats(prev => {
+                const newStats = [...prev.slice(1)];
+                const lastTime = prev[prev.length - 1].time;
+                if (serverState === 'running') {
+                    newStats.push({ time: lastTime + 1, cpu: Math.random() * 15 + 5, ram: Math.random() * 200 + 1200, netIn: Math.random() * 2, netOut: Math.random() * 5 });
+                } else if (serverState === 'starting') {
+                    newStats.push({ time: lastTime + 1, cpu: Math.random() * 40 + 60, ram: Math.random() * 1000 + 500, netIn: Math.random() * 10, netOut: Math.random() * 20 });
+                } else {
+                    newStats.push({ time: lastTime + 1, cpu: 0, ram: 0, netIn: 0, netOut: 0 });
+                }
+                return newStats;
+            });
+        }, 1000);
+        return () => clearInterval(timer);
+    }, [serverState]);
+
+    const handleStart = () => {
+        if (serverState !== 'offline') return;
+        toast.success('Starting server...');
+        setServerState('starting');
+        setLogs(["[10:24:15] [Server thread/INFO]: Starting minecraft server..."]);
+
+        let step = 1;
+        const interval = setInterval(() => {
+            if (step < mockLogs.length) {
+                setLogs(prev => [...prev, mockLogs[step]]);
+                step++;
+            } else {
+                clearInterval(interval);
+                setServerState('running');
+                toast.success('Server is online!', { icon: '🚀' });
+            }
+        }, 600);
+    };
+
+    const handleRestart = () => {
+        toast('Restarting server...', { icon: '🔄' });
+        setServerState('stopping');
         setIsShuttingDown(true);
-        setShutdownTime(10);
-    }
+        setShutdownTime(3);
+        setTimeout(() => {
+            handleStart();
+        }, 3500);
+    };
+
+    const handleGracefulStop = () => {
+        if (serverState === 'offline') return;
+        toast('Sending stop command...', { icon: '🛑' });
+        setIsShuttingDown(true);
+        setShutdownTime(5);
+    };
+
+    const handleKill = () => {
+        if (serverState === 'offline') return;
+        toast.error('Process killed ungracefully.');
+        setServerState('offline');
+        setLogs(prev => [...prev, "[10:24:25] [Server thread/ERROR]: Process killed by user."]);
+        setIsShuttingDown(false);
+    };
 
     const tabs = [
         { id: 'console', label: 'Console', icon: Terminal },
@@ -150,20 +247,20 @@ const ServerPanel = () => {
 
                         {/* Server Controls */}
                         <div className="glass-panel p-4 rounded-2xl flex flex-wrap gap-3">
-                            <button className="flex-1 min-w-[120px] bg-secondary hover:bg-emerald-400 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-secondary/20 transition-all">
+                            <button onClick={handleStart} disabled={serverState !== 'offline'} className="flex-1 min-w-[120px] bg-secondary hover:bg-emerald-400 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-secondary/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                                 <Play size={18} /> Start
                             </button>
-                            <button className="flex-1 min-w-[120px] bg-accent hover:bg-yellow-500 text-black font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-accent/20 transition-all">
+                            <button onClick={handleRestart} disabled={serverState === 'offline'} className="flex-1 min-w-[120px] bg-accent hover:bg-yellow-500 text-black font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-accent/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                                 <RotateCcw size={18} /> Restart
                             </button>
                             <button
                                 onClick={handleGracefulStop}
-                                disabled={isShuttingDown}
+                                disabled={serverState === 'offline' || isShuttingDown}
                                 className="flex-1 min-w-[120px] bg-surface border border-danger hover:bg-danger text-danger hover:text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50"
                             >
                                 {isShuttingDown ? `Stopping (${shutdownTime}s)` : <><Square size={18} /> Stop</>}
                             </button>
-                            <button className="flex-1 min-w-[120px] bg-danger hover:bg-red-500 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-danger/20 transition-all font-mono">
+                            <button onClick={handleKill} disabled={serverState === 'offline'} className="flex-1 min-w-[120px] bg-danger hover:bg-red-500 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-danger/20 transition-all font-mono disabled:opacity-50 disabled:cursor-not-allowed">
                                 <Skull size={18} /> Kill -9
                             </button>
                         </div>
@@ -179,14 +276,17 @@ const ServerPanel = () => {
                                     <span className="text-xs font-bold text-danger animate-pulse">Graceful Shutdown in Progress: {shutdownTime}s...</span>
                                 )}
                             </div>
-                            <div className="flex-1 bg-[#0c0c0e] p-4 overflow-y-auto font-mono text-sm leading-relaxed scroll-smooth scrollbar-thin">
-                                {mockLogs.map((log, i) => (
-                                    <div key={i} className="text-gray-300">
-                                        <span className="text-blue-400">{log.substring(0, 10)}</span>
-                                        <span className={log.includes('INFO') ? 'text-green-400' : 'text-gray-300'}>{log.substring(10, 31)}</span>
-                                        <span className="text-gray-100">{log.substring(31)}</span>
-                                    </div>
-                                ))}
+                            <div className="flex-1 bg-[#0c0c0e] p-4 overflow-y-auto font-mono text-sm leading-relaxed scroll-smooth scrollbar-thin flex flex-col justify-end">
+                                <div>
+                                    {logs.length === 0 && <div className="text-textMuted italic">Server is offline. Press Start to boot.</div>}
+                                    {logs.filter(log => typeof log === 'string').map((log, i) => (
+                                        <div key={i} className="text-gray-300">
+                                            <span className="text-blue-400">{log.substring(0, 10)}</span>
+                                            <span className={log.includes('INFO') ? 'text-green-400' : log.includes('ERROR') ? 'text-red-400' : 'text-gray-300'}>{log.substring(10, 31)}</span>
+                                            <span className="text-gray-100">{log.substring(31)}</span>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                             <div className="bg-surface border-t border-white/5 p-2">
                                 <input type="text" placeholder="Type a command..." className="w-full bg-black/50 border border-white/10 rounded-lg py-2 px-3 outline-none focus:border-primary text-white font-mono text-sm" />
@@ -199,12 +299,12 @@ const ServerPanel = () => {
                                 <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                                 <div className="flex items-center justify-between mb-2">
                                     <div className="flex items-center gap-2 text-white font-semibold"><Cpu size={16} className="text-primary" /> CPU Usage</div>
-                                    <span className="font-mono text-sm font-bold text-primary">28.4%</span>
+                                    <span className="font-mono text-sm font-bold text-primary">{stats[19].cpu.toFixed(1)}%</span>
                                 </div>
                                 <div className="text-xs text-textMuted mb-2">0% / 200% (2 Cores)</div>
                                 <div className="h-24">
                                     <ResponsiveContainer width="100%" height="100%">
-                                        <AreaChart data={mockStats}>
+                                        <AreaChart data={stats}>
                                             <Area type="monotone" dataKey="cpu" stroke="#6366f1" fillOpacity={0.2} fill="#6366f1" isAnimationActive={false} />
                                         </AreaChart>
                                     </ResponsiveContainer>
@@ -214,12 +314,12 @@ const ServerPanel = () => {
                                 <div className="absolute inset-0 bg-accent/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                                 <div className="flex items-center justify-between mb-2">
                                     <div className="flex items-center gap-2 text-white font-semibold"><MemoryStick size={16} className="text-accent" /> Memory Usage</div>
-                                    <span className="font-mono text-sm font-bold text-accent">1245 MB</span>
+                                    <span className="font-mono text-sm font-bold text-accent">{stats[19].ram.toFixed(0)} MB</span>
                                 </div>
                                 <div className="text-xs text-textMuted mb-2">0 MB / 4096 MB</div>
                                 <div className="h-24">
                                     <ResponsiveContainer width="100%" height="100%">
-                                        <AreaChart data={mockStats}>
+                                        <AreaChart data={stats}>
                                             <Area type="monotone" dataKey="ram" stroke="#f59e0b" fillOpacity={0.2} fill="#f59e0b" isAnimationActive={false} />
                                         </AreaChart>
                                     </ResponsiveContainer>
@@ -230,7 +330,7 @@ const ServerPanel = () => {
                                 <div className="flex items-center justify-between mb-2">
                                     <div className="flex items-center gap-2 text-white font-semibold"><Activity size={16} className="text-secondary" /> Network (In/Out)</div>
                                     <div className="font-mono text-sm font-bold flex gap-2">
-                                        <span className="text-secondary">3.2 MB/s</span>
+                                        <span className="text-secondary">{(stats[19].netIn + stats[19].netOut).toFixed(1)} MB/s</span>
                                     </div>
                                 </div>
                                 <div className="text-xs text-textMuted flex gap-3 mb-2">
@@ -239,7 +339,7 @@ const ServerPanel = () => {
                                 </div>
                                 <div className="h-24">
                                     <ResponsiveContainer width="100%" height="100%">
-                                        <AreaChart data={mockStats}>
+                                        <AreaChart data={stats}>
                                             <Area type="monotone" dataKey="netIn" stroke="#10b981" fillOpacity={0.2} fill="#10b981" isAnimationActive={false} />
                                             <Area type="monotone" dataKey="netOut" stroke="#ef4444" fillOpacity={0.2} fill="#ef4444" isAnimationActive={false} />
                                         </AreaChart>
@@ -435,7 +535,16 @@ const ServerPanel = () => {
                                             >
                                                 Cancel
                                             </button>
-                                            <button className="flex-[2] bg-primary hover:bg-primaryHover text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/30 transition-all text-lg flex justify-center items-center gap-2">
+                                            <button
+                                                onClick={() => {
+                                                    toast.success(`Installing ${selectedSoftware} ${selectedVersion} sequence initiated. Restarting server...`);
+                                                    setServerState('stopping');
+                                                    setTimeout(() => {
+                                                        setServerState('offline');
+                                                        setSelectedVersion(null);
+                                                    }, 2000);
+                                                }}
+                                                className="flex-[2] bg-primary hover:bg-primaryHover text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/30 transition-all text-lg flex justify-center items-center gap-2">
                                                 <Download size={20} />
                                                 Start Installation
                                             </button>
@@ -447,12 +556,287 @@ const ServerPanel = () => {
                     </motion.div>
                 )}
 
-                {/* Placeholders for other tabs just to prevent breaking */}
-                {['files', 'databases', 'schedules', 'users', 'backups', 'network', 'firewall'].includes(activeTab) && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-panel p-12 rounded-3xl text-center border border-dashed border-white/10">
-                        <Folder className="w-16 h-16 text-textMuted/30 mx-auto mb-4" />
-                        <h2 className="text-xl font-bold text-white mb-2 capitalize">{activeTab} Management</h2>
-                        <p className="text-textMuted">This section is currently under construction to match the V2 highly-premium standards.</p>
+                {activeTab === 'files' && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-panel p-6 rounded-3xl">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                            <div>
+                                <h2 className="text-2xl font-bold text-white mb-1">File Manager</h2>
+                                <p className="text-sm text-textMuted font-mono bg-white/5 py-1 px-2 rounded-lg inline-block">/home/container</p>
+                            </div>
+                            <div className="flex gap-2 w-full md:w-auto">
+                                <button className="flex-1 md:flex-none justify-center bg-surface hover:bg-white/10 border border-white/10 text-white font-medium py-2 px-4 rounded-xl transition-all text-sm">New File</button>
+                                <button className="flex-1 md:flex-none justify-center bg-surface hover:bg-white/10 border border-white/10 text-white font-medium py-2 px-4 rounded-xl transition-all text-sm">New Folder</button>
+                                <button className="flex-1 md:flex-none justify-center bg-primary hover:bg-primaryHover text-white font-medium py-2 px-4 rounded-xl transition-all text-sm shadow-lg shadow-primary/20">Upload</button>
+                            </div>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="border-b border-white/10 text-textMuted text-xs uppercase tracking-wider">
+                                        <th className="pb-3 pl-4 font-semibold w-[60%]">Name</th>
+                                        <th className="pb-3 p-4 font-semibold">Size</th>
+                                        <th className="pb-3 p-4 font-semibold hidden md:table-cell">Last Modified</th>
+                                        <th className="pb-3 p-4 font-semibold text-right"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {files.map((f, i) => (
+                                        <tr key={i} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors group">
+                                            <td className="p-4 flex items-center gap-3">
+                                                {f.type === 'folder' ? <Folder size={18} className="text-accent" /> : <File size={18} className="text-textMuted" />}
+                                                <span className="font-medium text-white hover:text-primary transition-colors cursor-pointer">{f.name}</span>
+                                            </td>
+                                            <td className="p-4 text-sm text-textMuted">{f.size}</td>
+                                            <td className="p-4 text-sm text-textMuted hidden md:table-cell">{f.date}</td>
+                                            <td className="p-4 text-right">
+                                                <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button onClick={() => toast('Edit feature incoming', { icon: '📝' })} className="p-2 bg-surface hover:bg-white/10 text-textMuted hover:text-white rounded-lg transition-colors border border-white/5 hover:border-white/20"><Edit2 size={14} /></button>
+                                                    <button onClick={() => {
+                                                        setFiles(prev => prev.filter(x => x.name !== f.name));
+                                                        toast.success(`Deleted ${f.name}`);
+                                                    }} className="p-2 bg-surface hover:bg-danger/20 text-textMuted hover:text-danger rounded-lg transition-colors border border-white/5 hover:border-danger/30"><Trash2 size={14} /></button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </motion.div>
+                )}
+
+                {activeTab === 'databases' && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-panel p-6 rounded-3xl">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-2xl font-bold text-white">Databases</h2>
+                            <button onClick={() => {
+                                const dbName = prompt('Database Name:');
+                                if (dbName) {
+                                    setDatabases(prev => [...prev, { name: dbName, host: 'db2.hoxen.one', username: `u${Math.floor(Math.random() * 1000)}_db`, size: '0 MB' }]);
+                                    toast.success('Database created');
+                                }
+                            }} className="flex items-center gap-2 bg-primary hover:bg-primaryHover text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-lg shadow-primary/20">
+                                <Plus size={16} /> New Database
+                            </button>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {databases.map((db, i) => (
+                                <div key={i} className="bg-surface border border-white/5 p-6 rounded-2xl relative group hover:border-white/20 transition-all">
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary border border-secondary/20">
+                                                <Database size={20} />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-white text-lg">{db.name}</h3>
+                                                <span className="text-xs text-secondary font-mono bg-secondary/10 px-2 py-0.5 rounded border border-secondary/20">Active</span>
+                                            </div>
+                                        </div>
+                                        <button onClick={() => {
+                                            setDatabases(prev => prev.filter(x => x.name !== db.name));
+                                            toast.success('Database deleted');
+                                        }} className="text-danger hover:bg-danger/10 p-2 rounded-lg transition-colors opacity-0 group-hover:opacity-100"><Trash2 size={16} /></button>
+                                    </div>
+                                    <div className="space-y-3 font-mono text-sm">
+                                        <div className="flex justify-between border-b border-white/5 pb-2">
+                                            <span className="text-textMuted text-xs font-sans uppercase tracking-wider">Host</span>
+                                            <span className="text-white select-all">{db.host}</span>
+                                        </div>
+                                        <div className="flex justify-between border-b border-white/5 pb-2">
+                                            <span className="text-textMuted text-xs font-sans uppercase tracking-wider">Username</span>
+                                            <span className="text-white select-all">{db.username}</span>
+                                        </div>
+                                        <div className="flex justify-between pt-1">
+                                            <span className="text-textMuted text-xs font-sans uppercase tracking-wider">Size</span>
+                                            <span className="text-white">{db.size}</span>
+                                        </div>
+                                    </div>
+                                    <button onClick={() => toast.success(`Revealed password for ${db.name}: hunter2`)} className="w-full mt-4 flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white py-2 rounded-xl transition-colors font-medium text-sm">
+                                        <Lock size={14} /> Reveal Password
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
+
+                {activeTab === 'schedules' && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-panel p-6 rounded-3xl">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-2xl font-bold text-white">Schedules & Cron</h2>
+                            <button onClick={() => toast('Schedule creation modal opened', { icon: '📝' })} className="flex items-center gap-2 bg-primary hover:bg-primaryHover text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-lg shadow-primary/20">
+                                <Plus size={16} /> Create Schedule
+                            </button>
+                        </div>
+                        <div className="space-y-3">
+                            {schedules.map((s, i) => (
+                                <div key={i} className="flex flex-col md:flex-row items-start md:items-center justify-between p-5 bg-surface border border-white/5 hover:border-primary/30 rounded-2xl transition-all group">
+                                    <div className="flex items-center gap-4 mb-4 md:mb-0">
+                                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+                                            <Clock size={20} />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-white text-lg">{s.name}</h3>
+                                            <p className="text-sm text-textMuted">Executes: <span className="font-mono bg-black/40 px-1.5 py-0.5 rounded text-white">{s.cron}</span></p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-6 w-full md:w-auto justify-between md:justify-end">
+                                        <div className="text-right">
+                                            <p className="text-xs text-textMuted uppercase tracking-wider">Next Run</p>
+                                            <p className="font-medium text-amber-400">{s.next}</p>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <button className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl text-sm font-medium transition-colors">Edit</button>
+                                            <button onClick={() => {
+                                                setSchedules(prev => prev.filter(x => x.name !== s.name));
+                                                toast.success('Schedule removed');
+                                            }} className="p-2 bg-white/5 hover:bg-danger/20 hover:text-danger hover:border-danger/30 border border-white/10 text-textMuted rounded-xl transition-colors"><Trash2 size={16} /></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
+
+                {activeTab === 'users' && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-panel p-6 rounded-3xl">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-2xl font-bold text-white">Subusers</h2>
+                            <button onClick={() => toast.success('Invite link copied to clipboard!')} className="flex items-center gap-2 bg-primary hover:bg-primaryHover text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-lg shadow-primary/20">
+                                <Plus size={16} /> Invite User
+                            </button>
+                        </div>
+                        <div className="space-y-3">
+                            {users.map((u, i) => (
+                                <div key={i} className="flex flex-col md:flex-row items-start md:items-center justify-between p-5 bg-surface border border-white/5 rounded-2xl transition-all group">
+                                    <div className="flex items-center gap-4 mb-4 md:mb-0">
+                                        <div className="hidden md:flex w-12 h-12 rounded-full bg-white/5 items-center justify-center text-textMuted border border-white/10">
+                                            <Users size={20} />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-white mb-1 flex items-center gap-2">
+                                                {u.email}
+                                                {u['2fa'] && <span className="text-[10px] bg-secondary/10 text-secondary border border-secondary/20 px-2 py-0.5 rounded-full uppercase tracking-widest font-bold flex items-center gap-1"><ShieldAlert size={10} /> 2FA setup</span>}
+                                            </h3>
+                                            <div className="flex gap-2">
+                                                {u.perms.map(p => <span key={p} className="text-xs font-mono text-textMuted bg-black/40 border border-white/10 px-2 py-0.5 rounded">{p}</span>)}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2 w-full md:w-auto justify-end">
+                                        <button className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl text-sm font-medium transition-colors">Manage Roles</button>
+                                        <button onClick={() => {
+                                            setUsers(prev => prev.filter(x => x.email !== u.email));
+                                            toast.success('User removed');
+                                        }} className="p-2 bg-white/5 hover:bg-danger/20 hover:text-danger hover:border-danger/30 border border-white/10 text-textMuted rounded-xl transition-colors"><Trash2 size={16} /></button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
+
+                {activeTab === 'backups' && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-panel p-6 rounded-3xl">
+                        <div className="flex justify-between items-center mb-6">
+                            <div>
+                                <h2 className="text-2xl font-bold text-white mb-1">Backups</h2>
+                                <p className="text-sm text-textMuted">Limit: <span className="text-white font-medium">1 / 3</span> backups</p>
+                            </div>
+                            <button className="flex items-center gap-2 bg-primary hover:bg-primaryHover text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-lg shadow-primary/20">
+                                <Archive size={16} /> Create Backup
+                            </button>
+                        </div>
+                        <div className="space-y-3">
+                            {backups.map((b, i) => (
+                                <div key={i} className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 bg-surface border border-white/5 hover:border-white/20 rounded-2xl transition-all group">
+                                    <div className="flex items-center gap-4 mb-4 md:mb-0">
+                                        <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent border border-accent/20">
+                                            <Archive size={18} />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-white">{b.name} <span className="text-xs text-textMuted ml-2 font-normal">{b.size}</span></h3>
+                                            <p className="text-sm text-textMuted">{b.date}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2 w-full md:w-auto justify-end">
+                                        <span className="text-xs bg-secondary/10 text-secondary border border-secondary/20 px-3 py-1.5 rounded-lg uppercase tracking-wider font-bold mr-2">{b.status}</span>
+                                        <button onClick={() => toast.success('Downloading backup...')} className="p-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl transition-colors"><Download size={16} /></button>
+                                        <button onClick={() => toast.success('Restoring backup...')} className="p-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl transition-colors tooltip" title="Restore"><RotateCcw size={16} /></button>
+                                        <button onClick={() => {
+                                            setBackups(prev => prev.filter(x => x.name !== b.name));
+                                            toast.success('Backup deleted');
+                                        }} className="p-2 bg-white/5 hover:bg-danger/20 hover:text-danger hover:border-danger/30 border border-white/10 text-textMuted rounded-xl transition-colors"><Trash2 size={16} /></button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
+
+                {activeTab === 'network' && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-panel p-6 rounded-3xl">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-2xl font-bold text-white">Network Allocations</h2>
+                            <button onClick={() => {
+                                setAllocations(prev => [...prev, { ip: '192.168.1.100', port: Math.floor(Math.random() * 50000 + 10000), isDefault: false, alias: '' }]);
+                                toast.success('Port requested and currently provisioning');
+                            }} className="flex items-center gap-2 bg-surface hover:bg-white/10 border border-white/10 text-white px-4 py-2 rounded-xl text-sm font-medium transition-all">
+                                <Plus size={16} /> Request Port
+                            </button>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="border-b border-white/10 text-textMuted text-xs uppercase tracking-wider">
+                                        <th className="pb-3 pl-4 font-semibold">IP Address</th>
+                                        <th className="pb-3 p-4 font-semibold">Port</th>
+                                        <th className="pb-3 p-4 font-semibold">Alias (Hostname)</th>
+                                        <th className="pb-3 p-4 font-semibold text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {allocations.map((a, i) => (
+                                        <tr key={i} className={`border-b border-white/5 hover:bg-white/[0.02] transition-colors group ${a.isDefault ? 'bg-primary/5' : ''}`}>
+                                            <td className="p-4 font-mono text-sm text-white">
+                                                {a.ip}
+                                                {a.isDefault && <span className="ml-3 text-[10px] bg-primary/20 text-primary border border-primary/30 px-2 py-0.5 rounded-full uppercase tracking-widest font-bold">Primary</span>}
+                                            </td>
+                                            <td className="p-4 font-mono text-white text-sm">{a.port}</td>
+                                            <td className="p-4">
+                                                {a.alias ? (
+                                                    <span className="bg-surface border border-white/10 text-white px-3 py-1 rounded-lg text-sm">{a.alias}</span>
+                                                ) : (
+                                                    <span className="text-textMuted text-sm italic">None</span>
+                                                )}
+                                            </td>
+                                            <td className="p-4 text-right">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    {!a.isDefault && <button onClick={() => toast.success('Allocation marked as primary')} className="text-xs border border-primary/50 text-primary hover:bg-primary hover:text-white px-3 py-1 rounded-lg transition-colors font-semibold">Make Primary</button>}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </motion.div>
+                )}
+
+                {activeTab === 'firewall' && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-panel p-6 rounded-3xl border border-danger/20">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-2xl font-bold text-white flex items-center gap-2"><ShieldAlert className="text-danger" /> Firewall</h2>
+                            <button onClick={() => toast.success('Rule modal opened')} className="flex items-center gap-2 bg-danger hover:bg-red-500 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-lg shadow-danger/20">
+                                <Plus size={16} /> Add Rule
+                            </button>
+                        </div>
+                        <div className="text-center py-12 text-textMuted">
+                            <ShieldAlert className="w-12 h-12 text-danger/30 mx-auto mb-4" />
+                            <h3 className="text-lg font-semibold text-white mb-2">No custom rules active</h3>
+                            <p className="text-sm">By default, all outgoing traffic is allowed and incoming is blocked except for your active allocations.</p>
+                        </div>
                     </motion.div>
                 )}
 

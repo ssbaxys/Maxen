@@ -63,26 +63,26 @@ const Dashboard = () => {
     const filteredServers = servers.filter(s => s.name.toLowerCase().includes(search.toLowerCase()) || s.id.toLowerCase().includes(search.toLowerCase()));
 
     return (
-        <div className="flex-1 max-w-7xl mx-auto px-6 md:px-12 py-12 w-full">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div className="flex-1 max-w-5xl mx-auto px-6 md:px-12 py-12 w-full">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b border-white/5 pb-6">
                 <div>
                     <h1 className="text-3xl font-bold text-white mb-2">Your Servers</h1>
-                    <p className="text-textMuted">Manage and monitor all your instances</p>
+                    <p className="text-textMuted text-sm">Manage and monitor all your instances</p>
                 </div>
 
-                <div className="relative w-full md:w-72">
+                <div className="relative w-full md:w-80">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-textMuted w-5 h-5" />
                     <input
                         type="text"
                         placeholder="Search servers..."
                         value={search}
                         onChange={e => setSearch(e.target.value)}
-                        className="w-full bg-surface border border-white/10 rounded-xl py-2.5 pl-10 pr-4 outline-none focus:border-primary transition-all text-sm"
+                        className="w-full bg-surface/50 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 outline-none focus:border-primary focus:bg-surface transition-all text-sm shadow-inner"
                     />
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">
                 {loading ? (
                     <div className="col-span-full py-12 text-center text-textMuted animate-pulse">Loading servers...</div>
                 ) : filteredServers.length === 0 ? (
