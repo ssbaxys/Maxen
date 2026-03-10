@@ -152,7 +152,7 @@ const AdminPanel = () => {
         <div className="flex-1 flex w-full max-w-7xl mx-auto px-4 md:px-8 py-8 h-full">
             {/* Sidebar */}
             <div className="w-64 flex-shrink-0 mr-8 hidden md:block">
-                <div className="bg-surface border border-border p-4 rounded-xl sticky top-24">
+                <div className="bg-surface border border-border p-4 rounded-lg sticky top-24">
                     <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-4 mb-4">Admin Dashboard</h2>
                     <nav className="space-y-1">
                         {tabs.map(tab => {
@@ -284,13 +284,13 @@ const AdminPanel = () => {
                                             placeholder="Search by ID, email, nick..."
                                             value={search}
                                             onChange={e => setSearch(e.target.value)}
-                                            className="w-full bg-surface border border-border rounded-xl py-2 pl-9 pr-4 outline-none focus:border-primary transition-all text-sm"
+                                            className="w-full bg-surface border border-border rounded-lg py-2 pl-9 pr-4 outline-none focus:border-primary transition-all text-sm"
                                         />
                                     </div>
                                     <select
                                         value={userSort}
                                         onChange={(e) => setUserSort(e.target.value as any)}
-                                        className="bg-surface border border-border rounded-xl py-2 px-3 outline-none focus:border-primary text-sm transition-all"
+                                        className="bg-surface border border-border rounded-lg py-2 px-3 outline-none focus:border-primary text-sm transition-all"
                                     >
                                         <option value="newest">Newest First</option>
                                         <option value="oldest">Oldest First</option>
@@ -371,7 +371,7 @@ const AdminPanel = () => {
                         <Card className="p-6">
                             <div className="flex justify-between items-center mb-6">
                                 <h2 className="text-2xl font-bold text-foreground">Global Server Fleet</h2>
-                                <Button onClick={() => setCreateServerOpen(true)} className="gap-2 shadow-primary/20 shadow-lg">
+                                <Button onClick={() => setCreateServerOpen(true)} className="gap-2">
                                     <Plus size={16} /> Deploy New
                                 </Button>
                             </div>
@@ -407,7 +407,7 @@ const AdminPanel = () => {
                                     </tbody>
                                 </table>
                                 {serversArray.length === 0 && (
-                                    <div className="text-center py-12 text-muted-foreground border border-dashed border-border rounded-2xl w-full mt-4">
+                                    <div className="text-center py-12 text-muted-foreground border border-dashed border-border rounded-lg w-full mt-4">
                                         <Server className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
                                         No global servers provisioned yet.
                                     </div>
@@ -462,13 +462,13 @@ const AdminPanel = () => {
                                             placeholder="Search ledger..."
                                             value={search}
                                             onChange={e => setSearch(e.target.value)}
-                                            className="w-full bg-surface border border-border rounded-xl py-2 pl-9 pr-4 outline-none focus:border-primary transition-all text-sm"
+                                            className="w-full bg-surface border border-border rounded-lg py-2 pl-9 pr-4 outline-none focus:border-primary transition-all text-sm"
                                         />
                                     </div>
                                     <select
                                         value={logSort}
                                         onChange={(e) => setLogSort(e.target.value as any)}
-                                        className="bg-surface border border-border rounded-xl py-2 px-3 outline-none focus:border-primary text-sm transition-all"
+                                        className="bg-surface border border-border rounded-lg py-2 px-3 outline-none focus:border-primary text-sm transition-all"
                                     >
                                         <option value="newest">Newest First</option>
                                         <option value="alphabetical">Action A-Z</option>
@@ -483,7 +483,7 @@ const AdminPanel = () => {
                                         return 0; // Default is newest via service block
                                     })
                                     .map(log => (
-                                        <div key={log.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-surface border border-border rounded-xl text-sm hover:bg-surface-hover transition-colors gap-2 sm:gap-0">
+                                        <div key={log.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-surface border border-border rounded-lg text-sm hover:bg-surface-hover transition-colors gap-2 sm:gap-0">
                                             <div>
                                                 <Badge variant="outline" className="mr-3 uppercase px-2 py-[2px] text-[10px]">{log.type}</Badge>
                                                 <span className="font-bold text-foreground pr-2 border-r border-border mr-2">{log.user}</span>
@@ -509,20 +509,20 @@ const AdminPanel = () => {
                             initial={{ opacity: 0, scale: 0.95, y: 10 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                            className="bg-background w-full max-w-lg rounded-xl border border-border shadow-2xl overflow-hidden flex flex-col"
+                            className="bg-background w-full max-w-lg rounded-lg border border-border shadow-2xl overflow-hidden flex flex-col"
                         >
                             <div className="flex justify-between items-center p-6 border-b border-border bg-surface">
                                 <h3 className="text-xl font-bold text-foreground flex items-center gap-2"><ShieldBan className="text-danger" /> Restrictions Console</h3>
                                 <button onClick={() => setBanModalOpen(false)} className="text-muted-foreground hover:text-foreground transition-colors"><X size={20} /></button>
                             </div>
                             <div className="p-6 space-y-6">
-                                <div className="bg-danger/5 border border-danger/20 p-4 rounded-xl">
+                                <div className="bg-danger/5 border border-danger/20 p-4 rounded-lg">
                                     <p className="text-sm text-danger font-medium">Modifying privileges for User ID: <span className="font-mono">{selectedUserId}</span></p>
                                 </div>
 
                                 <div>
                                     <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-2">Restriction Duration (From Now)</label>
-                                    <select value={banDuration} onChange={(e) => setBanDuration(e.target.value)} className="w-full bg-surface border border-border rounded-xl py-3 px-4 text-foreground outline-none focus:border-danger transition-colors cursor-pointer appearance-none">
+                                    <select value={banDuration} onChange={(e) => setBanDuration(e.target.value)} className="w-full bg-surface border border-border rounded-lg py-3 px-4 text-foreground outline-none focus:border-danger transition-colors cursor-pointer appearance-none">
                                         <option value="1h">1 Hour (Cool off)</option>
                                         <option value="24h">24 Hours (Warning)</option>
                                         <option value="7d">7 Days (Severe Break)</option>
@@ -531,7 +531,7 @@ const AdminPanel = () => {
                                 </div>
                                 <div>
                                     <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-2">Features to Revoke</label>
-                                    <div className="space-y-3 bg-surface border border-border p-4 rounded-xl">
+                                    <div className="space-y-3 bg-surface border border-border p-4 rounded-lg">
                                         <label className="flex items-center gap-3 cursor-pointer">
                                             <input
                                                 type="checkbox"
@@ -564,7 +564,7 @@ const AdminPanel = () => {
 
                                 <div className="pt-2 flex gap-3">
                                     <Button variant="outline" className="flex-1" onClick={() => setBanModalOpen(false)}>Cancel</Button>
-                                    <Button variant="danger" className="flex-[2] gap-2 shadow-danger/20 shadow-lg" onClick={handleApplyBan}><ShieldBan size={16} /> Enforce Limits</Button>
+                                    <Button variant="danger" className="flex-[2] gap-2" onClick={handleApplyBan}><ShieldBan size={16} /> Enforce Limits</Button>
                                 </div>
                             </div>
                         </motion.div>
@@ -577,39 +577,39 @@ const AdminPanel = () => {
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.95 }}
-                            className="bg-background w-full max-w-lg rounded-xl border border-border shadow-2xl overflow-hidden flex flex-col"
+                            className="bg-background w-full max-w-lg rounded-lg border border-border shadow-2xl overflow-hidden flex flex-col"
                         >
                             <div className="flex justify-between items-center p-6 border-b border-border bg-surface">
                                 <h3 className="text-xl font-bold text-foreground">Deploy Global Server</h3>
                                 <button onClick={() => setCreateServerOpen(false)} className="text-muted-foreground hover:text-foreground transition-colors"><X size={20} /></button>
                             </div>
                             <div className="p-6 space-y-4">
-                                <div className="bg-primary/5 text-primary text-sm p-4 rounded-xl border border-primary/20 mb-2">
+                                <div className="bg-primary/5 text-primary text-sm p-4 rounded-lg border border-primary/20 mb-2">
                                     Administrative bypass: Servers deployed here bypass billing pipelines.
                                 </div>
                                 <div className="space-y-4">
                                     <div>
                                         <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-2">Server Display Name</label>
-                                        <input type="text" placeholder="e.g. System Override Instance" className="w-full bg-surface border border-border rounded-xl py-3 px-4 outline-none focus:border-primary text-foreground text-sm" />
+                                        <input type="text" placeholder="e.g. System Override Instance" className="w-full bg-surface border border-border rounded-lg py-3 px-4 outline-none focus:border-primary text-foreground text-sm" />
                                     </div>
                                     <div>
                                         <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-2">Target Owner UID</label>
-                                        <input type="text" placeholder="Paste user ID to bind ownership..." className="w-full bg-surface border border-border rounded-xl py-3 px-4 outline-none focus:border-primary text-foreground text-sm font-mono" />
+                                        <input type="text" placeholder="Paste user ID to bind ownership..." className="w-full bg-surface border border-border rounded-lg py-3 px-4 outline-none focus:border-primary text-foreground text-sm font-mono" />
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-2">RAM (GB)</label>
-                                            <input type="number" step="0.1" placeholder="e.g. 2.5" className="w-full bg-surface border border-border rounded-xl py-3 px-4 outline-none focus:border-primary text-foreground text-sm" />
+                                            <input type="number" step="0.1" placeholder="e.g. 2.5" className="w-full bg-surface border border-border rounded-lg py-3 px-4 outline-none focus:border-primary text-foreground text-sm" />
                                         </div>
                                         <div>
                                             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-2">Storage (NVMe GB)</label>
-                                            <input type="number" step="1" placeholder="e.g. 20" className="w-full bg-surface border border-border rounded-xl py-3 px-4 outline-none focus:border-primary text-foreground text-sm" />
+                                            <input type="number" step="1" placeholder="e.g. 20" className="w-full bg-surface border border-border rounded-lg py-3 px-4 outline-none focus:border-primary text-foreground text-sm" />
                                         </div>
                                     </div>
                                 </div>
                                 <div className="pt-4 flex gap-3">
                                     <Button variant="outline" className="flex-1" onClick={() => setCreateServerOpen(false)}>Cancel</Button>
-                                    <Button className="flex-[2] gap-2 shadow-primary/20 shadow-lg" onClick={() => Toast.success("Server creation queued.")}><Plus size={16} /> Provision Instance</Button>
+                                    <Button className="flex-[2] gap-2" onClick={() => Toast.success("Server creation queued.")}><Plus size={16} /> Provision Instance</Button>
                                 </div>
                             </div>
                         </motion.div>

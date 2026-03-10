@@ -126,7 +126,7 @@ const Dashboard = () => {
                         onChange={e => setSearch(e.target.value)}
                         className="w-full md:w-64 h-9"
                     />
-                    <Button variant="outline" size="icon" className="h-9 w-9" title="Filter" onClick={() => Toast.promise(new Promise(resolve => setTimeout(resolve, 1000)), { loading: 'Applying filter...', success: 'Filter applied', error: 'Error' })}>
+                    <Button variant="outline" size="icon" className="h-9 w-9" title="Filter" onClick={() => Toast.success('Filter toggled')}>
                         <Filter size={16} />
                     </Button>
                     <Button onClick={() => setCreateOpen(true)} className="h-9 gap-2 shrink-0">

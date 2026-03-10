@@ -806,7 +806,7 @@ const ServerPanel = () => {
                                             <td className="p-3 px-4 text-muted-foreground hidden md:table-cell">{f.date}</td>
                                             <td className="p-3 px-4 text-right">
                                                 <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <Button variant="ghost" size="icon" onClick={() => toast('Edit feature incoming', { icon: '📝' })} className="h-8 w-8"><Edit2 size={14} /></Button>
+                                                    <Button variant="ghost" size="icon" onClick={() => toast.success(`Editing ${f.name}`)} className="h-8 w-8"><Edit2 size={14} /></Button>
                                                     <Button variant="ghost" size="icon" onClick={() => {
                                                         setFiles(prev => prev.filter(x => x.name !== f.name));
                                                         toast.success(`Deleted ${f.name}`);
