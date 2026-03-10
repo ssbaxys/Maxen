@@ -9,10 +9,9 @@ const PublicLayout = ({ children }: { children: React.ReactNode }) => {
 
     return (
         <div className={cn(
-            "min-h-screen flex flex-col transition-colors duration-300 font-sans antialiased text-foreground selection:bg-primary/30 relative",
+            "min-h-screen flex flex-col transition-colors duration-300 font-sans antialiased text-foreground selection:bg-foreground/20 relative",
             colorblindMode && 'colorblind-filters'
         )}>
-            <div className="ambient-bg" />
             <Navbar />
             <main className="flex-1 w-full flex flex-col relative z-10">
                 {children}
