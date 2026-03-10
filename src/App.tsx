@@ -4,6 +4,7 @@ import { auth, db } from './lib/firebase/init';
 import { onAuthStateChanged } from 'firebase/auth';
 import { ref, get } from 'firebase/database';
 import { useAuthStore } from './store/authStore';
+import { useUIStore } from './store/uiStore';
 
 import PublicLayout from './components/layouts/PublicLayout';
 import PanelLayout from './components/layouts/PanelLayout';
@@ -22,6 +23,17 @@ import { Toaster } from 'react-hot-toast';
 
 function App() {
     const { setUser, setVisualNick, setIsRoot, setLoading } = useAuthStore();
+    const theme = useUIStore((s) => s.theme);
+
+    // Apply theme class to <html>
+    useEffect(() => {
+        const root = document.documentElement;
+        if (theme === 'light') {
+            root.classList.add('light');
+        } else {
+            root.classList.remove('light');
+        }
+    }, [theme]);
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -66,7 +78,7 @@ function App() {
             <Toaster
                 position="bottom-right"
                 toastOptions={{
-                    className: '!bg-surface !text-foreground !border !border-border !shadow-glass-lg',
+                    className: '!bg-surface !text-foreground !border !border-border !shadow-lg',
                     success: { iconTheme: { primary: '#10b981', secondary: '#fff' } },
                     error: { iconTheme: { primary: '#ef4444', secondary: '#fff' } }
                 }}

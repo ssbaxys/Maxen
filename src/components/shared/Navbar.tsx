@@ -11,7 +11,7 @@ import { Button } from '../ui/Button';
 import { cn } from '../../lib/utils';
 
 const Header = () => {
-    const { i18n } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { user, visualNick, isRoot } = useAuthStore();
     const { volume, setVolume, colorblindMode, setColorblindMode, language, setLanguage, voiceoverEnabled, setVoiceover } = useUIStore();
     const navigate = useNavigate();
@@ -90,24 +90,24 @@ const Header = () => {
                                     <div className="p-1 space-y-0.5">
                                         <Link to="/dashboard" onClick={() => setMenuOpen(false)} className="flex items-center gap-2.5 px-3 py-1.5 text-sm hover:bg-surface-hover rounded-sm transition-colors text-foreground">
                                             <User size={14} className="text-muted-foreground" />
-                                            Dashboard
+                                            {t('Dashboard')}
                                         </Link>
 
                                         <button onClick={() => navigate('/settings')} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-sm hover:bg-surface-hover rounded-sm transition-colors text-left text-foreground">
                                             <Settings size={14} className="text-muted-foreground" />
-                                            Settings
+                                            {t('Settings')}
                                         </button>
 
                                         <div className="py-2 px-3 mt-1 border-t border-border">
-                                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">Preferences</p>
+                                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">{t('Preferences')}</p>
 
                                             <div className="flex items-center justify-between mb-3 text-xs font-medium">
-                                                <div className="flex items-center gap-2 text-muted-foreground"><Volume2 size={14} /> Volume</div>
+                                                <div className="flex items-center gap-2 text-muted-foreground"><Volume2 size={14} /> {t('Volume')}</div>
                                                 <input type="range" min="0" max="100" value={volume} onChange={(e) => setVolume(Number(e.target.value))} className="w-20 accent-foreground" />
                                             </div>
 
                                             <label className="flex items-center justify-between text-xs font-medium cursor-pointer group mb-3">
-                                                <div className="flex items-center gap-2 text-muted-foreground group-hover:text-foreground transition-colors"><Eye size={14} /> Colorblind</div>
+                                                <div className="flex items-center gap-2 text-muted-foreground group-hover:text-foreground transition-colors"><Eye size={14} /> {t('Colorblind')}</div>
                                                 <div className={cn("w-7 h-3.5 rounded-full transition-colors relative", colorblindMode ? "bg-foreground" : "bg-muted")}>
                                                     <div className={cn("absolute top-0.5 left-0.5 w-2.5 h-2.5 rounded-full bg-background transition-transform duration-200", colorblindMode ? "translate-x-3.5" : "")} />
                                                 </div>
@@ -115,7 +115,7 @@ const Header = () => {
                                             </label>
 
                                             <label className="flex items-center justify-between text-xs font-medium cursor-pointer group">
-                                                <div className="flex items-center gap-2 text-muted-foreground group-hover:text-foreground transition-colors"><Volume2 size={14} /> Voiceover</div>
+                                                <div className="flex items-center gap-2 text-muted-foreground group-hover:text-foreground transition-colors"><Volume2 size={14} /> {t('Voiceover')}</div>
                                                 <div className={cn("w-7 h-3.5 rounded-full transition-colors relative", voiceoverEnabled ? "bg-foreground" : "bg-muted")}>
                                                     <div className={cn("absolute top-0.5 left-0.5 w-2.5 h-2.5 rounded-full bg-background transition-transform duration-200", voiceoverEnabled ? "translate-x-3.5" : "")} />
                                                 </div>
@@ -123,7 +123,7 @@ const Header = () => {
                                             </label>
 
                                             <div className="flex items-center justify-between text-xs font-medium mt-3 pt-3 border-t border-border">
-                                                <div className="flex items-center gap-2 text-muted-foreground">Language</div>
+                                                <div className="flex items-center gap-2 text-muted-foreground">{t('Language')}</div>
                                                 <div className="flex bg-surface border border-border rounded-md p-0.5">
                                                     <button onClick={() => { setLanguage('en'); i18n.changeLanguage('en'); }} className={cn("px-2 py-0.5 text-[10px] rounded-[4px] transition-all font-bold", language === 'en' ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground")}>EN</button>
                                                     <button onClick={() => { setLanguage('ru'); i18n.changeLanguage('ru'); }} className={cn("px-2 py-0.5 text-[10px] rounded-[4px] transition-all font-bold", language === 'ru' ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground")}>RU</button>
@@ -136,7 +136,7 @@ const Header = () => {
                                         <div className="p-1 border-t border-border">
                                             <Link to="/admin" onClick={() => setMenuOpen(false)} className="flex items-center gap-2.5 px-3 py-1.5 text-sm text-foreground hover:bg-surface-hover rounded-sm transition-colors font-medium">
                                                 <ShieldAlert size={14} />
-                                                Admin Panel
+                                                {t('Admin Panel')}
                                             </Link>
                                         </div>
                                     )}
@@ -144,7 +144,7 @@ const Header = () => {
                                     <div className="p-1 border-t border-border">
                                         <button onClick={handleLogout} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-sm text-danger hover:bg-danger/10 rounded-sm transition-colors text-left font-medium">
                                             <LogOut size={14} />
-                                            Logout
+                                            {t('Logout')}
                                         </button>
                                     </div>
                                 </motion.div>
@@ -154,10 +154,10 @@ const Header = () => {
                 ) : (
                     <div className="flex items-center gap-2">
                         <Button variant="ghost" onClick={() => navigate('/login')} size="sm" className="h-8">
-                            Log in
+                            {t('Log in')}
                         </Button>
                         <Button onClick={() => navigate('/register')} size="sm" className="h-8">
-                            Sign Up
+                            {t('Sign Up')}
                         </Button>
                     </div>
                 )}

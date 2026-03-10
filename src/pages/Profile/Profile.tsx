@@ -4,8 +4,10 @@ import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 const Profile = () => {
+    const { t } = useTranslation();
     const { user, visualNick, isRoot } = useAuthStore();
 
     // Mock data for formatting
@@ -21,9 +23,9 @@ const Profile = () => {
             <div className="mb-8 border-b border-border pb-6 flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold text-foreground mb-2 flex items-center gap-3">
-                        Profile Overview
+                        {t('Profile Overview')}
                     </h1>
-                    <p className="text-muted-foreground text-sm">Manage your personal information and security settings</p>
+                    <p className="text-muted-foreground text-sm">{t('Manage your personal information and security settings')}</p>
                 </div>
             </div>
 
@@ -34,9 +36,9 @@ const Profile = () => {
                         <div className="absolute inset-0 bg-primary/5 group-hover:bg-primary/10 transition-colors" />
 
                         <div className="relative inline-flex mb-6">
-                            <div className="w-24 h-24 rounded-[2rem] bg-gradient-to-br from-primary to-accent p-1 shadow-glow-lg">
-                                <div className="w-full h-full bg-surface rounded-[calc(2rem-4px)] flex items-center justify-center">
-                                    <span className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-br from-primary to-white">
+                            <div className="w-24 h-24 rounded-2xl bg-foreground p-1 shadow-md">
+                                <div className="w-full h-full bg-surface rounded-[calc(1rem-4px)] flex items-center justify-center">
+                                    <span className="text-4xl font-black text-foreground">
                                         {(visualNick || user?.email || 'U')[0].toUpperCase()}
                                     </span>
                                 </div>
@@ -73,7 +75,7 @@ const Profile = () => {
                     <Card className="p-6">
                         <h3 className="text-sm font-bold text-foreground uppercase tracking-widest mb-4">Security Overview</h3>
                         <div className="space-y-4">
-                            <div className="flex items-center justify-between p-3 bg-surface rounded-xl border border-border">
+                            <div className="flex items-center justify-between p-3 bg-surface rounded-lg border border-border">
                                 <div className="flex items-center gap-3">
                                     <KeyRound size={18} className="text-muted-foreground" />
                                     <span className="text-sm font-medium text-foreground">Password</span>
@@ -89,7 +91,7 @@ const Profile = () => {
                                 <Badge variant="outline" className="text-muted-foreground">Disabled</Badge>
                             </div>
 
-                            <Button variant="outline" className="w-full mt-2">Setup 2FA</Button>
+                            <Button variant="outline" className="w-full mt-2">{t('Setup 2FA')}</Button>
                         </div>
                     </Card>
                 </motion.div>
@@ -99,17 +101,17 @@ const Profile = () => {
                     <Card className="p-8">
                         <div className="flex items-center gap-3 mb-6 pb-6 border-b border-border">
                             <User className="text-primary w-5 h-5" />
-                            <h3 className="text-lg font-bold text-foreground">Personal Information</h3>
+                            <h3 className="text-lg font-bold text-foreground">{t('Personal Information')}</h3>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="space-y-1">
-                                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Display Name</label>
+                                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{t('Display Name')}</label>
                                 <p className="text-foreground font-medium text-lg">{visualNick || 'Not configured'}</p>
                             </div>
 
                             <div className="space-y-1">
-                                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Account Creation</label>
+                                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{t('Account Creation')}</label>
                                 <div className="flex items-center gap-2 text-foreground font-medium text-lg">
                                     <Calendar size={18} className="text-muted-foreground" />
                                     {formatDate(user?.metadata.creationTime)}
@@ -117,7 +119,7 @@ const Profile = () => {
                             </div>
 
                             <div className="space-y-1">
-                                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Primary Email</label>
+                                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{t('Primary Email')}</label>
                                 <div className="flex items-center gap-2 text-foreground font-medium text-lg">
                                     <Mail size={18} className="text-muted-foreground" />
                                     {user?.email || 'Unknown'}
@@ -125,10 +127,10 @@ const Profile = () => {
                             </div>
 
                             <div className="space-y-1">
-                                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Phone Number</label>
+                                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{t('Phone Number')}</label>
                                 <div className="flex items-center gap-2 text-foreground font-medium text-lg">
                                     <Phone size={18} className="text-muted-foreground" />
-                                    {user?.phoneNumber || <span className="text-muted-foreground italic">Not linked</span>}
+                                    {user?.phoneNumber || <span className="text-muted-foreground italic">{t('Not linked')}</span>}
                                 </div>
                             </div>
                         </div>
@@ -138,16 +140,16 @@ const Profile = () => {
                         <div className="flex items-center justify-between mb-6 pb-6 border-b border-border">
                             <div className="flex items-center gap-3">
                                 <KeyRound className="text-primary w-5 h-5" />
-                                <h3 className="text-lg font-bold text-foreground">Authentication Providers</h3>
+                                <h3 className="text-lg font-bold text-foreground">{t('Authentication Providers')}</h3>
                             </div>
-                            <Button variant="outline" size="sm" className="h-8 gap-2"><Plus size={14} /> Link Provider</Button>
+                            <Button variant="outline" size="sm" className="h-8 gap-2"><Plus size={14} /> {t('Link Provider')}</Button>
                         </div>
 
                         <div className="grid gap-3">
                             {user?.providerData.map((provider, idx) => {
                                 let ProviderIcon: any = MonitorSmartphone;
                                 let providerName = provider.providerId;
-                                let bgClass = "bg-white/5";
+                                let bgClass = "bg-surface";
 
                                 if (provider.providerId === 'password') {
                                     ProviderIcon = Mail;
@@ -163,7 +165,7 @@ const Profile = () => {
                                 }
 
                                 return (
-                                    <div key={idx} className="flex items-center justify-between p-4 bg-surface rounded-xl border border-border">
+                                    <div key={idx} className="flex items-center justify-between p-4 bg-surface rounded-lg border border-border">
                                         <div className="flex items-center gap-3">
                                             <div className={`w-10 h-10 rounded-lg flex items-center justify-center border border-transparent ${bgClass}`}>
                                                 <ProviderIcon size={18} />

@@ -28,28 +28,28 @@ const Footer = () => {
                     <div>
                         <h4 className="font-semibold text-foreground mb-4">Product</h4>
                         <ul className="space-y-3">
-                            <li><Link to="/pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Pricing</Link></li>
-                            <li><Link to="/features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Features</Link></li>
-                            <li><Link to="/infrastructure" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Infrastructure</Link></li>
+                            <li><span className="text-sm text-muted-foreground cursor-default">Pricing</span></li>
+                            <li><span className="text-sm text-muted-foreground cursor-default">Features</span></li>
+                            <li><span className="text-sm text-muted-foreground cursor-default">Infrastructure</span></li>
                         </ul>
                     </div>
 
                     <div>
                         <h4 className="font-semibold text-foreground mb-4">Resources</h4>
                         <ul className="space-y-3">
-                            <li><a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Documentation</a></li>
-                            <li><a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">API Reference</a></li>
-                            <li><a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Blog</a></li>
+                            <li><span className="text-sm text-muted-foreground cursor-default">Documentation</span></li>
+                            <li><span className="text-sm text-muted-foreground cursor-default">API Reference</span></li>
+                            <li><span className="text-sm text-muted-foreground cursor-default">Blog</span></li>
                         </ul>
                     </div>
 
                     <div>
                         <h4 className="font-semibold text-foreground mb-4">Company</h4>
                         <ul className="space-y-3">
-                            <li><Link to="/about" className="text-sm text-muted-foreground hover:text-foreground transition-colors">About</Link></li>
-                            <li><Link to="/contact" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Contact</Link></li>
-                            <li><Link to="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Terms</Link></li>
-                            <li><Link to="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Privacy</Link></li>
+                            <li><span className="text-sm text-muted-foreground cursor-default">About</span></li>
+                            <li><span className="text-sm text-muted-foreground cursor-default">Contact</span></li>
+                            <li><span className="text-sm text-muted-foreground cursor-default">Terms</span></li>
+                            <li><span className="text-sm text-muted-foreground cursor-default">Privacy</span></li>
                         </ul>
                     </div>
                 </div>

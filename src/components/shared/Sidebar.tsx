@@ -6,20 +6,22 @@ import { signOut } from 'firebase/auth';
 import { Dropdown } from '../ui/Dropdown';
 import { cn } from '../../lib/utils';
 import Toast from '../ui/Toast';
+import { useTranslation } from 'react-i18next';
 
 const Sidebar = () => {
+    const { t } = useTranslation();
     const location = useLocation();
     const navigate = useNavigate();
     const { user, visualNick, isRoot } = useAuthStore();
 
     const links = [
-        { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-        { name: 'Profile', path: '/profile', icon: User },
-        { name: 'Settings', path: '/settings', icon: Settings },
+        { name: t('Dashboard'), path: '/dashboard', icon: LayoutDashboard },
+        { name: t('Profile'), path: '/profile', icon: User },
+        { name: t('Settings'), path: '/settings', icon: Settings },
     ];
 
     if (isRoot) {
-        links.push({ name: 'Admin', path: '/admin', icon: ShieldAlert });
+        links.push({ name: t('Admin'), path: '/admin', icon: ShieldAlert });
     }
 
     const handleLogout = async () => {
@@ -32,17 +34,17 @@ const Sidebar = () => {
     };
 
     const userDropdownItems = [
-        { label: 'Home Page', icon: <Home size={16} />, onClick: () => navigate('/') },
-        { label: 'Profile', icon: <User size={16} />, onClick: () => navigate('/profile') },
-        { label: 'Settings', icon: <Settings size={16} />, onClick: () => navigate('/settings') },
-        ...(isRoot ? [{ label: 'Admin Panel', icon: <ShieldAlert size={16} />, onClick: () => navigate('/admin') }] : []),
-        { label: 'Sign Out', icon: <LogOut size={16} />, onClick: handleLogout, destructive: true },
+        { label: t('Home Page'), icon: <Home size={16} />, onClick: () => navigate('/') },
+        { label: t('Profile'), icon: <User size={16} />, onClick: () => navigate('/profile') },
+        { label: t('Settings'), icon: <Settings size={16} />, onClick: () => navigate('/settings') },
+        ...(isRoot ? [{ label: t('Admin Panel'), icon: <ShieldAlert size={16} />, onClick: () => navigate('/admin') }] : []),
+        { label: t('Sign Out'), icon: <LogOut size={16} />, onClick: handleLogout, destructive: true },
     ];
 
     return (
         <aside className="w-[240px] flex-shrink-0 border-r border-border bg-background hidden md:flex flex-col relative z-20 h-[calc(100vh-57px)] sticky top-[57px] overflow-visible">
             <div className="px-4 py-4 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-widest">
-                Main Menu
+                {t('Main Menu')}
             </div>
 
             <nav className="px-3 space-y-0.5 flex-1 overflow-y-auto w-full scrollbar-hidden">

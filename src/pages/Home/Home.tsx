@@ -2,9 +2,11 @@ import { Link } from 'react-router-dom';
 import { Server, Shield, ChevronRight, Cpu, HardDrive, Zap, Terminal, Check } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '../../components/ui/Button';
+import { useTranslation } from 'react-i18next';
 import { Card } from '../../components/ui/Card';
 
 const Home = () => {
+    const { t } = useTranslation();
     return (
         <div className="flex-1 flex flex-col relative w-full overflow-hidden bg-background">
 
@@ -20,7 +22,7 @@ const Home = () => {
                     transition={{ duration: 0.4, ease: "easeOut" }}
                 >
                     <div className="inline-flex items-center gap-3 px-4 py-2 rounded-md bg-surface border border-border text-foreground shadow-sm mb-12">
-                        <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                         <span className="text-xs font-semibold tracking-wider font-mono">AMD RYZEN™ 9 9950X3D DEPLOYED</span>
                     </div>
                 </motion.div>
@@ -55,11 +57,11 @@ const Home = () => {
                             <ChevronRight size={18} className="ml-2 group-hover:translate-x-1 transition-transform" />
                         </Button>
                     </Link>
-                    <Link to="/login">
+                    <a href="#pricing">
                         <Button variant="outline" size="lg" className="w-full sm:w-auto h-12 px-8 text-base font-medium rounded-md text-foreground">
-                            Read Documentation
+                            {t('View Documentation')}
                         </Button>
-                    </Link>
+                    </a>
                 </motion.div>
             </section>
 
@@ -150,7 +152,7 @@ const Home = () => {
             </section>
 
             {/* 4. Tariffs */}
-            <section className="py-24 px-6 max-w-6xl mx-auto w-full relative z-10">
+            <section id="pricing" className="py-24 px-6 max-w-6xl mx-auto w-full relative z-10">
                 <div className="text-center mb-16">
                     <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-4">Transparent Pricing</h2>
                     <p className="text-muted-foreground text-lg">Scalable resources to fit your scope. No hidden fees.</p>

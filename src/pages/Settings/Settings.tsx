@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Settings as SettingsIcon, Volume2, Monitor, Ear, Smartphone, User as UserIcon, Loader2 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useUIStore } from '../../store/uiStore';
@@ -11,20 +11,21 @@ import { Button } from '../../components/ui/Button';
 import Toast from '../../components/ui/Toast';
 import { motion } from 'framer-motion';
 import { getFriendlyAuthError } from '../../utils/authErrors';
+import { useTranslation } from 'react-i18next';
 
 const Settings = () => {
+    const { t, i18n } = useTranslation();
     const { user, visualNick } = useAuthStore();
-    const { volume, setVolume, colorblindMode, setColorblindMode, voiceoverEnabled, setVoiceover, theme, setTheme } = useUIStore();
+    const { volume, setVolume, colorblindMode, setColorblindMode, voiceoverEnabled, setVoiceover, theme, setTheme, language, setLanguage } = useUIStore();
 
-    // Local state for forms
     const [nickInput, setNickInput] = useState(visualNick || '');
     const [phoneInput, setPhoneInput] = useState(user?.phoneNumber || '');
     const [otp, setOtp] = useState('');
     const [showOtp, setShowOtp] = useState(false);
     const [isSavingPref, setIsSavingPref] = useState(false);
     const [isLinkingPhone, setIsLinkingPhone] = useState(false);
+    const volumeRef = useRef(volume);
 
-    // Sync UI store changes to Firebase when they happen
     const savePreference = async (key: string, value: any) => {
         if (!user) return;
         setIsSavingPref(true);
@@ -39,7 +40,11 @@ const Settings = () => {
 
     const handleVolumeChange = (newVol: number) => {
         setVolume(newVol);
-        // Debounce actual DB save for sliders in a real app, mock immediate here
+        volumeRef.current = newVol;
+    };
+
+    const handleVolumeSave = () => {
+        savePreference('volume', volumeRef.current);
     };
 
     const toggleColorblind = () => {
@@ -57,6 +62,12 @@ const Settings = () => {
     const handleThemeChange = (newTheme: 'dark' | 'light') => {
         setTheme(newTheme);
         savePreference('theme', newTheme);
+    };
+
+    const handleLanguageChange = (lang: 'en' | 'ru') => {
+        setLanguage(lang);
+        i18n.changeLanguage(lang);
+        savePreference('language', lang);
     };
 
     const handleNickSave = async () => {
@@ -129,9 +140,9 @@ const Settings = () => {
             <div className="mb-8 border-b border-border pb-6 flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold text-foreground mb-2 flex items-center gap-3">
-                        <SettingsIcon className="text-primary w-8 h-8" /> Preferences
+                        <SettingsIcon className="text-primary w-8 h-8" /> {t('Preferences')}
                     </h1>
-                    <p className="text-muted-foreground text-sm">Customize your hosting experience {isSavingPref && <span className="text-primary ml-2 animate-pulse">Syncing...</span>}</p>
+                    <p className="text-muted-foreground text-sm">{t('Customize your hosting experience')} {isSavingPref && <span className="text-primary ml-2 animate-pulse">Syncing...</span>}</p>
                 </div>
             </div>
 
@@ -142,38 +153,47 @@ const Settings = () => {
                     <Card className="p-8 h-full">
                         <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border">
                             <Monitor className="text-primary w-5 h-5" />
-                            <h3 className="text-lg font-bold text-foreground">Appearance</h3>
+                            <h3 className="text-lg font-bold text-foreground">{t('Appearance')}</h3>
                         </div>
 
                         <div className="space-y-6">
                             <div>
-                                <label className="text-sm font-bold text-foreground mb-3 block">Dashboard Theme</label>
+                                <label className="text-sm font-bold text-foreground mb-3 block">{t('Dashboard Theme')}</label>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div
                                         onClick={() => handleThemeChange('dark')}
-                                        className={`p-4 rounded-xl border flex flex-col items-center gap-2 cursor-pointer transition-all ${theme === 'dark' ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-surface hover:bg-surface-hover text-muted-foreground'}`}
+                                        className={`p-4 rounded-lg border flex flex-col items-center gap-2 cursor-pointer transition-all ${theme === 'dark' ? 'border-primary bg-primary/10 text-foreground' : 'border-border bg-surface hover:bg-surface-hover text-muted-foreground'}`}
                                     >
-                                        <div className="w-8 h-8 rounded-full bg-background border border-border" />
-                                        <span className="text-sm font-bold">Dark Mode</span>
+                                        <div className="w-8 h-8 rounded-full bg-[hsl(240,10%,4%)] border border-border" />
+                                        <span className="text-sm font-bold">{t('Dark Mode')}</span>
                                     </div>
                                     <div
                                         onClick={() => handleThemeChange('light')}
-                                        className={`p-4 rounded-xl border flex flex-col items-center gap-2 cursor-pointer transition-all ${theme === 'light' ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-surface hover:bg-surface-hover text-muted-foreground'}`}
+                                        className={`p-4 rounded-lg border flex flex-col items-center gap-2 cursor-pointer transition-all ${theme === 'light' ? 'border-primary bg-primary/10 text-foreground' : 'border-border bg-surface hover:bg-surface-hover text-muted-foreground'}`}
                                     >
                                         <div className="w-8 h-8 rounded-full bg-white border border-border" />
-                                        <span className="text-sm font-bold">Light Mode</span>
+                                        <span className="text-sm font-bold">{t('Light Mode')}</span>
                                     </div>
                                 </div>
                             </div>
 
                             <div>
-                                <label className="text-sm font-bold text-foreground mb-1 block">Panel Language</label>
-                                <p className="text-xs text-muted-foreground mb-3">Choose the default language for the interface.</p>
-                                <select className="w-full bg-surface/50 border border-border rounded-xl px-4 py-3 outline-none focus:border-primary text-sm text-foreground appearance-none">
-                                    <option value="en">English (US)</option>
-                                    <option value="ru">Русский (Russian)</option>
-                                    <option value="de">Deutsch (German)</option>
-                                </select>
+                                <label className="text-sm font-bold text-foreground mb-1 block">{t('Panel Language')}</label>
+                                <p className="text-xs text-muted-foreground mb-3">{t('Choose the default language for the interface.')}</p>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <button
+                                        onClick={() => handleLanguageChange('en')}
+                                        className={`p-3 rounded-lg border text-sm font-medium transition-all ${language === 'en' ? 'border-primary bg-primary/10 text-foreground' : 'border-border bg-surface hover:bg-surface-hover text-muted-foreground'}`}
+                                    >
+                                        English (US)
+                                    </button>
+                                    <button
+                                        onClick={() => handleLanguageChange('ru')}
+                                        className={`p-3 rounded-lg border text-sm font-medium transition-all ${language === 'ru' ? 'border-primary bg-primary/10 text-foreground' : 'border-border bg-surface hover:bg-surface-hover text-muted-foreground'}`}
+                                    >
+                                        Русский
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </Card>
@@ -184,48 +204,48 @@ const Settings = () => {
                     <Card className="p-8 h-full">
                         <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border">
                             <Ear className="text-primary w-5 h-5" />
-                            <h3 className="text-lg font-bold text-foreground">Accessibility</h3>
+                            <h3 className="text-lg font-bold text-foreground">{t('Accessibility')}</h3>
                         </div>
 
                         <div className="space-y-6">
                             <div>
                                 <div className="flex justify-between items-center mb-2">
-                                    <label className="text-sm font-bold text-foreground flex items-center gap-2"><Volume2 size={16} /> Interface Volume</label>
+                                    <label className="text-sm font-bold text-foreground flex items-center gap-2"><Volume2 size={16} /> {t('Interface Volume')}</label>
                                     <span className="text-xs text-primary font-mono">{volume}%</span>
                                 </div>
                                 <input
                                     type="range" min="0" max="100"
                                     value={volume}
                                     onChange={(e) => handleVolumeChange(Number(e.target.value))}
-                                    onMouseUp={() => savePreference('volume', volume)}
-                                    className="w-full accent-primary h-2 bg-surface rounded-lg appearance-none cursor-pointer"
+                                    onMouseUp={handleVolumeSave}
+                                    onTouchEnd={handleVolumeSave}
+                                    className="w-full accent-primary h-2 bg-muted rounded-lg appearance-none cursor-pointer"
                                 />
-                                <p className="text-xs text-muted-foreground mt-2">Adjusts the volume of notification pings and console alerts.</p>
                             </div>
 
                             <div
                                 onClick={toggleColorblind}
-                                className="flex items-start justify-between p-4 bg-surface rounded-xl border border-border cursor-pointer hover:border-primary/50 transition-all select-none"
+                                className="flex items-start justify-between p-4 bg-surface rounded-lg border border-border cursor-pointer hover:border-primary/50 transition-all select-none"
                             >
                                 <div>
-                                    <p className="text-sm font-bold text-foreground">Colorblind Mode</p>
-                                    <p className="text-xs text-muted-foreground mt-1">Enhances contrast and changes status indicators from Green/Red to Blue/Orange (Protanopia focus).</p>
+                                    <p className="text-sm font-bold text-foreground">{t('Colorblind Mode')}</p>
+                                    <p className="text-xs text-muted-foreground mt-1">Enhances contrast and changes status indicators.</p>
                                 </div>
-                                <div className={`w-12 h-6 rounded-full shrink-0 transition-colors relative ${colorblindMode ? 'bg-primary' : 'bg-surface-hover border border-border'}`}>
-                                    <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${colorblindMode ? 'translate-x-7' : 'translate-x-1'}`} />
+                                <div className={`w-10 h-5 rounded-full shrink-0 transition-colors relative ${colorblindMode ? 'bg-primary' : 'bg-muted border border-border'}`}>
+                                    <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-background transition-transform ${colorblindMode ? 'translate-x-5' : 'translate-x-0.5'}`} />
                                 </div>
                             </div>
 
                             <div
                                 onClick={toggleVoice}
-                                className="flex items-start justify-between p-4 bg-surface rounded-xl border border-border cursor-pointer hover:border-primary/50 transition-all select-none"
+                                className="flex items-start justify-between p-4 bg-surface rounded-lg border border-border cursor-pointer hover:border-primary/50 transition-all select-none"
                             >
                                 <div>
-                                    <p className="text-sm font-bold text-foreground">Site Navigator (Voiceover)</p>
-                                    <p className="text-xs text-muted-foreground mt-1">Enables experimental text-to-speech for critical alerts and panel state changes.</p>
+                                    <p className="text-sm font-bold text-foreground">{t('Site Navigator (Voiceover)')}</p>
+                                    <p className="text-xs text-muted-foreground mt-1">Enables experimental text-to-speech for critical alerts.</p>
                                 </div>
-                                <div className={`w-12 h-6 rounded-full shrink-0 transition-colors relative ${voiceoverEnabled ? 'bg-primary' : 'bg-surface-hover border border-border'}`}>
-                                    <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${voiceoverEnabled ? 'translate-x-7' : 'translate-x-1'}`} />
+                                <div className={`w-10 h-5 rounded-full shrink-0 transition-colors relative ${voiceoverEnabled ? 'bg-primary' : 'bg-muted border border-border'}`}>
+                                    <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-background transition-transform ${voiceoverEnabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
                                 </div>
                             </div>
                         </div>
@@ -237,13 +257,13 @@ const Settings = () => {
                     <Card className="p-8">
                         <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border">
                             <UserIcon className="text-primary w-5 h-5" />
-                            <h3 className="text-lg font-bold text-foreground">Account Management</h3>
+                            <h3 className="text-lg font-bold text-foreground">{t('Account Management')}</h3>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="space-y-3">
-                                <label className="text-sm font-bold text-foreground">Public Display Name</label>
-                                <p className="text-xs text-muted-foreground">This name is visible to members invited to your servers.</p>
+                                <label className="text-sm font-bold text-foreground">{t('Public Display Name')}</label>
+                                <p className="text-xs text-muted-foreground">{t('This name is visible to members invited to your servers.')}</p>
                                 <div className="flex gap-2">
                                     <Input
                                         icon={<UserIcon size={16} />}
@@ -252,25 +272,25 @@ const Settings = () => {
                                         placeholder="MaxenUser123"
                                         className="flex-1"
                                     />
-                                    <Button onClick={handleNickSave} disabled={nickInput === visualNick || !nickInput}>Save</Button>
+                                    <Button onClick={handleNickSave} disabled={nickInput === visualNick || !nickInput}>{t('Save')}</Button>
                                 </div>
                             </div>
 
                             <div className="space-y-3">
-                                <label className="text-sm font-bold text-foreground">Link Phone Number</label>
-                                <p className="text-xs text-muted-foreground">Used for SMS 2FA and identity verification.</p>
+                                <label className="text-sm font-bold text-foreground">{t('Link Phone Number')}</label>
+                                <p className="text-xs text-muted-foreground">{t('Used for SMS 2FA and identity verification.')}</p>
 
                                 {user?.phoneNumber ? (
-                                    <div className="flex items-center justify-between p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+                                    <div className="flex items-center justify-between p-3 bg-secondary/10 border border-secondary/20 rounded-lg">
                                         <div className="flex items-center gap-3">
-                                            <Smartphone className="text-emerald-500 w-5 h-5" />
+                                            <Smartphone className="text-secondary w-5 h-5" />
                                             <div>
-                                                <p className="text-sm font-bold text-emerald-500">Phone Linked</p>
-                                                <p className="text-xs text-emerald-500/80">{user.phoneNumber}</p>
+                                                <p className="text-sm font-bold text-secondary">{t('Phone Linked')}</p>
+                                                <p className="text-xs text-secondary/80">{user.phoneNumber}</p>
                                             </div>
                                         </div>
                                         <Button variant="outline" className="border-danger/30 text-danger hover:bg-danger/10 hover:text-danger" onClick={handlePhoneUnlink} disabled={isLinkingPhone}>
-                                            {isLinkingPhone ? <Loader2 className="animate-spin w-4 h-4" /> : 'Unlink'}
+                                            {isLinkingPhone ? <Loader2 className="animate-spin w-4 h-4" /> : t('Unlink')}
                                         </Button>
                                     </div>
                                 ) : !showOtp ? (
@@ -285,7 +305,7 @@ const Settings = () => {
                                             disabled={isLinkingPhone}
                                         />
                                         <Button variant="outline" onClick={handlePhoneLink} disabled={!phoneInput || isLinkingPhone}>
-                                            {isLinkingPhone ? <Loader2 className="animate-spin w-4 h-4" /> : 'Link'}
+                                            {isLinkingPhone ? <Loader2 className="animate-spin w-4 h-4" /> : t('Link')}
                                         </Button>
                                     </div>
                                 ) : (
@@ -299,11 +319,11 @@ const Settings = () => {
                                                 className="flex-1 text-center tracking-widest font-mono"
                                                 disabled={isLinkingPhone}
                                             />
-                                            <Button variant="outline" className="bg-primary/20 text-primary border-primary/30 hover:bg-primary hover:text-white" onClick={confirmPhoneLink} disabled={!otp || isLinkingPhone}>
-                                                {isLinkingPhone ? <Loader2 className="animate-spin w-4 h-4" /> : 'Verify'}
+                                            <Button onClick={confirmPhoneLink} disabled={!otp || isLinkingPhone}>
+                                                {isLinkingPhone ? <Loader2 className="animate-spin w-4 h-4" /> : t('Verify')}
                                             </Button>
                                         </div>
-                                        <button onClick={() => setShowOtp(false)} className="text-xs text-muted-foreground hover:text-foreground text-left transition-colors font-medium">Cancel setup</button>
+                                        <button onClick={() => setShowOtp(false)} className="text-xs text-muted-foreground hover:text-foreground text-left transition-colors font-medium">{t('Cancel setup')}</button>
                                     </div>
                                 )}
                                 <div id="link-recaptcha"></div>

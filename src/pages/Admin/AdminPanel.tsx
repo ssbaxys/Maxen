@@ -152,8 +152,8 @@ const AdminPanel = () => {
         <div className="flex-1 flex w-full max-w-7xl mx-auto px-4 md:px-8 py-8 h-full">
             {/* Sidebar */}
             <div className="w-64 flex-shrink-0 mr-8 hidden md:block">
-                <div className="bg-surface border border-border p-4 rounded-3xl sticky top-24">
-                    <h2 className="text-xs font-bold text-textMuted uppercase tracking-widest px-4 mb-4">Admin Dashboard</h2>
+                <div className="bg-surface border border-border p-4 rounded-xl sticky top-24">
+                    <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-4 mb-4">Admin Dashboard</h2>
                     <nav className="space-y-1">
                         {tabs.map(tab => {
                             const Icon = tab.icon;
@@ -162,9 +162,9 @@ const AdminPanel = () => {
                                 <button
                                     key={tab.id}
                                     onClick={() => { setActiveTab(tab.id); setSearch(''); }}
-                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm ${isActive
-                                        ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                                        : `text-muted-foreground hover:bg-white/5 hover:text-white ${tab.color || ''}`
+                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all font-medium text-sm ${isActive
+                                        ? 'bg-foreground text-background'
+                                        : `text-muted-foreground hover:bg-surface-hover hover:text-foreground ${tab.color || ''}`
                                         }`}
                                 >
                                     <Icon size={18} />

@@ -8,8 +8,11 @@ export default {
         extend: {
             colors: {
                 background: 'hsl(var(--background))',
-                surface: 'hsl(var(--surface))',
-                surfaceHover: 'hsl(var(--surface-hover))',
+                foreground: 'hsl(var(--foreground))',
+                surface: {
+                    DEFAULT: 'hsl(var(--surface))',
+                    hover: 'hsl(var(--surface-hover))',
+                },
                 border: 'hsl(var(--border))',
                 ring: 'hsl(var(--ring))',
                 primary: {
@@ -33,10 +36,6 @@ export default {
                     DEFAULT: 'hsl(var(--muted))',
                     foreground: 'hsl(var(--muted-foreground))',
                 },
-
-                // Old colors mapped to variables or kept for backward compatibility slightly
-                textBase: 'hsl(var(--foreground))',
-                textMuted: 'hsl(var(--muted-foreground))',
             },
             fontFamily: {
                 sans: ['Inter', 'system-ui', 'sans-serif'],
