@@ -1,28 +1,53 @@
 {
     "rules": {
+        ".read": false,
+        ".write": false,
         "users": {
             "$uid": {
-                ".read": "$uid === auth.uid || root.child('users/' + auth.uid + '/root').val() === true",
-                ".write": "$uid === auth.uid || root.child('users/' + auth.uid + '/root').val() === true",
+                ".read": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('root').val() === true)",
+                ".write": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('root').val() === true)",
                 "root": {
                     ".write": false
                 }
             }
         },
-        "servers": {
+        "usernames": {
             ".read": "auth != null",
-            "$serverId": {
-                ".write": "root.child('users/' + auth.uid + '/root').val() === true",
-                "users": {
-                    "$uid": {
-                        ".write": "$uid === auth.uid"
-                    }
-                }
+            "$username": {
+                ".write": "auth != null && (!data.exists() || data.val() === auth.uid)"
             }
         },
-        "systemLogs": {
-            ".read": "root.child('users/' + auth.uid + '/root').val() === true",
-            ".write": "root.child('users/' + auth.uid + '/root').val() === true"
+        "servers": {
+            "$serverId": {
+                ".read": "auth != null && (data.child('owner').val() === auth.uid || root.child('serverMembers').child($serverId).child(auth.uid).exists() || root.child('users').child(auth.uid).child('root').val() === true)",
+                ".write": "auth != null && (data.child('owner').val() === auth.uid || (data.exists() === false && newData.child('owner').val() === auth.uid) || root.child('users').child(auth.uid).child('root').val() === true)"
+            }
+        },
+        "serverMembers": {
+            "$serverId": {
+                ".read": "auth != null && (root.child('servers').child($serverId).child('owner').val() === auth.uid || data.child(auth.uid).exists() || root.child('users').child(auth.uid).child('root').val() === true)",
+                ".write": "auth != null && (root.child('servers').child($serverId).child('owner').val() === auth.uid || root.child('users').child(auth.uid).child('root').val() === true)"
+            }
+        },
+        "logs": {
+            "$serverId": {
+                ".read": "auth != null && (root.child('servers').child($serverId).child('owner').val() === auth.uid || root.child('serverMembers').child($serverId).child(auth.uid).exists() || root.child('users').child(auth.uid).child('root').val() === true)",
+                ".write": false
+            }
+        },
+        "stats": {
+            "$serverId": {
+                ".read": "auth != null && (root.child('servers').child($serverId).child('owner').val() === auth.uid || root.child('serverMembers').child($serverId).child(auth.uid).exists() || root.child('users').child(auth.uid).child('root').val() === true)",
+                ".write": false
+            }
+        },
+        "settings": {
+            ".read": "auth != null",
+            ".write": "auth != null && root.child('users').child(auth.uid).child('root').val() === true"
+        },
+        "bans": {
+            ".read": "auth != null && root.child('users').child(auth.uid).child('root').val() === true",
+            ".write": "auth != null && root.child('users').child(auth.uid).child('root').val() === true"
         }
     }
 }

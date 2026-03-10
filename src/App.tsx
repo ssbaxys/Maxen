@@ -1,18 +1,23 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useEffect } from 'react';
-import { auth, db } from './firebase';
+import { auth, db } from './lib/firebase/init';
 import { onAuthStateChanged } from 'firebase/auth';
 import { ref, get } from 'firebase/database';
 import { useAuthStore } from './store/authStore';
 
-import Layout from './components/Layout/Layout';
+import PublicLayout from './components/layouts/PublicLayout';
+import PanelLayout from './components/layouts/PanelLayout';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+
 import Home from './pages/Home/Home';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
 import Dashboard from './pages/Dashboard/Dashboard';
-
 import ServerPanel from './pages/Server/ServerPanel';
 import AdminPanel from './pages/Admin/AdminPanel';
+import Profile from './pages/Profile/Profile';
+import Settings from './pages/Settings/Settings';
+import NotFound from './pages/NotFound/NotFound';
 import { Toaster } from 'react-hot-toast';
 
 function App() {
@@ -42,25 +47,30 @@ function App() {
 
     return (
         <Router>
-            <Layout>
-                <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/register" element={<Register />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/servers/:id/*" element={<ServerPanel />} />
-                    <Route path="/admin/*" element={<AdminPanel />} />
-                    <Route path="*" element={<Navigate to="/" />} />
-                </Routes>
-                <Toaster
-                    position="bottom-right"
-                    toastOptions={{
-                        className: '!bg-surface !text-white !border !border-white/10 !shadow-2xl',
-                        success: { iconTheme: { primary: '#10b981', secondary: '#fff' } },
-                        error: { iconTheme: { primary: '#ef4444', secondary: '#fff' } }
-                    }}
-                />
-            </Layout>
+            <Routes>
+                {/* Public Routes */}
+                <Route path="/" element={<PublicLayout><Home /></PublicLayout>} />
+                <Route path="/login" element={<PublicLayout><Login /></PublicLayout>} />
+                <Route path="/register" element={<PublicLayout><Register /></PublicLayout>} />
+
+                {/* Protected Panel Routes */}
+                <Route path="/dashboard" element={<ProtectedRoute><PanelLayout><Dashboard /></PanelLayout></ProtectedRoute>} />
+                <Route path="/servers/:id/*" element={<ProtectedRoute><PanelLayout><ServerPanel /></PanelLayout></ProtectedRoute>} />
+                <Route path="/profile" element={<ProtectedRoute><PanelLayout><Profile /></PanelLayout></ProtectedRoute>} />
+                <Route path="/settings" element={<ProtectedRoute><PanelLayout><Settings /></PanelLayout></ProtectedRoute>} />
+                <Route path="/admin/*" element={<ProtectedRoute requireRoot={true}><PanelLayout><AdminPanel /></PanelLayout></ProtectedRoute>} />
+
+                {/* 404 Route */}
+                <Route path="*" element={<PublicLayout><NotFound /></PublicLayout>} />
+            </Routes>
+            <Toaster
+                position="bottom-right"
+                toastOptions={{
+                    className: '!bg-surface !text-foreground !border !border-border !shadow-glass-lg',
+                    success: { iconTheme: { primary: '#10b981', secondary: '#fff' } },
+                    error: { iconTheme: { primary: '#ef4444', secondary: '#fff' } }
+                }}
+            />
         </Router>
     );
 }

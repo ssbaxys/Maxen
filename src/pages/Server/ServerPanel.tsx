@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { useParams, Link } from 'react-router-dom';
 import {
@@ -9,51 +9,28 @@ import {
 } from 'lucide-react';
 import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuthStore } from '../../store/authStore';
+import { serverService } from '../../services/serverService';
+import { ServerData } from '../../types/firebase';
 
-const mockLogs = [
-    "[10:24:15] [Server thread/INFO]: Starting minecraft server version 1.21.1",
-    "[10:24:15] [Server thread/INFO]: Loading properties",
-    "[10:24:15] [Server thread/INFO]: Default game type: SURVIVAL",
-    "[10:24:15] [Server thread/INFO]: Generating keypair",
-    "[10:24:16] [Server thread/INFO]: Starting Minecraft server on *:25565",
-    "[10:24:16] [Server thread/INFO]: Using default channel type",
-    "[10:24:18] [Server thread/INFO]: Preparing level \"world\"",
-    "[10:24:22] [Server thread/INFO]: Preparing start region for dimension minecraft:overworld",
-    "[10:24:24] [Server thread/INFO]: Time elapsed: 1452 ms",
-    "[10:24:24] [Server thread/INFO]: Done (9.124s)! For help, type \"help\"",
+const STARTUP_SEQUENCE = [
+    "[SERVER THREAD/INFO]: Starting maxen-host dedicated server instance...",
+    "[SERVER THREAD/INFO]: Loading kernel and module bindings...",
+    "[SERVER THREAD/INFO]: Acquiring local IP address and port bindings...",
+    "[SERVER THREAD/INFO]: Starting environment pre-flight checks...",
+    "[SERVER THREAD/INFO]: Pre-flight successful. Launching primary thread.",
+    "[SERVER THREAD/INFO]: Generating keypair...",
+    "[SERVER THREAD/INFO]: Starting service on *:25565",
+    "[SERVER THREAD/INFO]: Initializing remote management protocols...",
+    "[SERVER THREAD/INFO]: Preparing level \"world\"",
+    "[SERVER THREAD/INFO]: Preparing start region for dimension minecraft:overworld",
+    "[SERVER THREAD/INFO]: Time elapsed: 1845ms",
+    "[SERVER THREAD/INFO]: Done (4.29s)! Type \"help\" or \"?\" for commands.",
 ];
 
 // Stats are now generated dynamically via state
 
-const mockFiles = [
-    { name: 'world', type: 'folder', size: '--', date: 'Oct 24, 2023 14:32' },
-    { name: 'plugins', type: 'folder', size: '--', date: 'Oct 24, 2023 14:30' },
-    { name: 'server.properties', type: 'file', size: '1.2 KB', date: 'Oct 24, 2023 14:35' },
-    { name: 'spigot.yml', type: 'file', size: '3.4 KB', date: 'Oct 24, 2023 14:35' },
-    { name: 'eula.txt', type: 'file', size: '158 B', date: 'Oct 24, 2023 14:31' },
-];
-
-const mockDatabases = [
-    { name: 's1_core', host: 'db1.hoxen.one', username: 'u1_r4nd0m', size: '45.2 MB' },
-];
-
-const mockSchedules = [
-    { name: 'Daily Backup', cron: '0 4 * * *', next: 'in 8 hours', status: 'Active' },
-    { name: 'Restart Server', cron: '0 0 * * *', next: 'in 4 hours', status: 'Active' },
-];
-
-const mockSubusers = [
-    { email: 'admin2@example.com', perms: ['control', 'console'], '2fa': true },
-];
-
-const mockBackups = [
-    { name: 'Backup_2023-10-24', size: '1.4 GB', date: 'Oct 24, 2023 04:00', status: 'Completed' },
-];
-
-const mockAllocations = [
-    { ip: '192.168.1.100', port: 25565, isDefault: true, alias: 'play.hoxen.one' },
-    { ip: '192.168.1.100', port: 8192, isDefault: false, alias: '' },
-];
+// Removed mock arrays
 
 const versionsData = {
     Vanilla: ['1.21.1', '1.20.6', '1.19.4', '1.18.2', '1.17.1', '1.12.2'],
@@ -78,103 +55,224 @@ const versionsData = {
 
 const ServerPanel = () => {
     const { id } = useParams();
+    const { user } = useAuthStore();
     const [activeTab, setActiveTab] = useState('console');
+
+    // Remote State (from Firebase)
+    const [serverData, setServerData] = useState<ServerData | null>(null);
+    const [stats, setStats] = useState<{ time: number, cpu: number, ram: number, netIn: number, netOut: number }[]>(Array.from({ length: 20 }, (_, i) => ({ time: i, cpu: 0, ram: 0, netIn: 0, netOut: 0 })));
+    const [logs, setLogs] = useState<{ message: string, type: 'INFO' | 'WARN' | 'ERROR', timestamp: number }[]>([]);
+
+    // Local State
+    const [isLoading, setIsLoading] = useState(true);
     const [selectedSoftware, setSelectedSoftware] = useState<string | null>(null);
     const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
     const [wipeServer, setWipeServer] = useState(false);
+    const [consoleInput, setConsoleInput] = useState("");
+    const [serverNameInput, setServerNameInput] = useState("");
+    const [allocations, setAllocations] = useState<any[]>([]);
+    const [databases, setDatabases] = useState<any[]>([]);
+    const [files, setFiles] = useState<any[]>([]);
+    const [schedules, setSchedules] = useState<any[]>([]);
+    const [users, setUsers] = useState<any[]>([]);
+    const [backups, setBackups] = useState<any[]>([]);
 
-    // Deep Simulation States
-    const [serverState, setServerState] = useState<'offline' | 'starting' | 'running' | 'stopping'>('offline');
-    const [logs, setLogs] = useState<string[]>([]);
-    const [stats, setStats] = useState(Array.from({ length: 20 }, (_, i) => ({ time: i, cpu: 0, ram: 0, netIn: 0, netOut: 0 })));
+    // Refs for simulation intervals
+    const simulatorRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const startupSequenceRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const timeRef = useRef(0);
+    const logsEndRef = useRef<HTMLDivElement>(null);
 
-    const [files, setFiles] = useState(mockFiles);
-    const [databases, setDatabases] = useState(mockDatabases);
-    const [schedules, setSchedules] = useState(mockSchedules);
-    const [users, setUsers] = useState(mockSubusers);
-    const [backups, setBackups] = useState(mockBackups);
-    const [allocations, setAllocations] = useState(mockAllocations);
-
-    // Shut down timer state
-    const [isShuttingDown, setIsShuttingDown] = useState(false);
-    const [shutdownTime, setShutdownTime] = useState(5);
-
+    // Initial Data Fetch
     useEffect(() => {
-        let timer: ReturnType<typeof setInterval>;
-        if (isShuttingDown && shutdownTime > 0) {
-            timer = setInterval(() => {
-                setShutdownTime(prev => prev - 1);
-            }, 1000);
-        } else if (isShuttingDown && shutdownTime === 0) {
-            setIsShuttingDown(false);
-            setShutdownTime(5);
-            setServerState('offline');
-            setLogs(prev => [...prev, "[10:25:05] [Server thread/INFO]: Server stopped."]);
-            toast.success('Server offline');
-        }
-        return () => clearInterval(timer);
-    }, [isShuttingDown, shutdownTime]);
+        if (!id) return;
 
-    useEffect(() => {
-        const timer = setInterval(() => {
-            setStats(prev => {
-                const newStats = [...prev.slice(1)];
-                const lastTime = prev[prev.length - 1].time;
-                if (serverState === 'running') {
-                    newStats.push({ time: lastTime + 1, cpu: Math.random() * 15 + 5, ram: Math.random() * 200 + 1200, netIn: Math.random() * 2, netOut: Math.random() * 5 });
-                } else if (serverState === 'starting') {
-                    newStats.push({ time: lastTime + 1, cpu: Math.random() * 40 + 60, ram: Math.random() * 1000 + 500, netIn: Math.random() * 10, netOut: Math.random() * 20 });
-                } else {
-                    newStats.push({ time: lastTime + 1, cpu: 0, ram: 0, netIn: 0, netOut: 0 });
+        const unsubServer = serverService.subscribeToServer(id, (data) => {
+            setServerData(data);
+            if (data && serverNameInput === "") { // Only set initially so we don't overwrite typing
+                setServerNameInput(data.name);
+            }
+            setIsLoading(false);
+        });
+
+        const unsubStats = serverService.subscribeToStats(id, (data) => {
+            if (data) {
+                // Keep the last 20 stat entries mapped by time
+                const sortedStats = Object.values(data).sort((a, b) => a.time - b.time);
+                let latest20 = sortedStats.slice(-20);
+
+                // If there aren't 20 entries yet, pad with zeroes at the beginning to always keep the graph full width
+                while (latest20.length < 20) {
+                    latest20 = [{ time: (latest20[0]?.time || 0) - 1, cpu: 0, ram: 0, netIn: 0, netOut: 0 }, ...latest20];
                 }
-                return newStats;
-            });
-        }, 1000);
-        return () => clearInterval(timer);
-    }, [serverState]);
 
-    const handleStart = () => {
-        if (serverState !== 'offline') return;
+                setStats(latest20);
+                timeRef.current = sortedStats[sortedStats.length - 1]?.time || 0;
+            } else {
+                setStats(Array.from({ length: 20 }, (_, i) => ({ time: i, cpu: 0, ram: 0, netIn: 0, netOut: 0 })));
+                timeRef.current = 0;
+            }
+        });
+
+        const unsubLogs = serverService.subscribeToLogs(id, (data) => {
+            if (data) {
+                setLogs(Object.values(data).sort((a, b) => a.timestamp - b.timestamp));
+            } else {
+                setLogs([]);
+            }
+        });
+
+        return () => {
+            unsubServer();
+            unsubStats();
+            unsubLogs();
+            if (simulatorRef.current) clearInterval(simulatorRef.current);
+            if (startupSequenceRef.current) clearInterval(startupSequenceRef.current);
+        };
+    }, [id]);
+
+    // Auto-scroll console
+    useEffect(() => {
+        logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [logs]);
+
+    // Graph & State Simulator Loop!
+    // This effect acts as the "Server Hardware Simulator". If the server is not offline, it artificially generates CPU/RAM ticks and writes them to the DB.
+    useEffect(() => {
+        if (!id || !serverData) return;
+
+        if (simulatorRef.current) clearInterval(simulatorRef.current);
+
+        if (serverData.status === 'running' || serverData.status === 'starting' || serverData.status === 'stopping') {
+            simulatorRef.current = setInterval(() => {
+                timeRef.current++;
+                let newStat;
+
+                const currentSpecs = serverData.specs || { cpu: 1, ram: 1 };
+                const maxRam = currentSpecs.ram * 1024; // MB
+                const maxCpu = currentSpecs.cpu * 100;
+
+                if (serverData.status === 'running') {
+                    newStat = {
+                        time: timeRef.current,
+                        cpu: Math.min(maxCpu, Math.max(0, (stats[stats.length - 1]?.cpu || 5) + (Math.random() * 10 - 5))),
+                        ram: Math.min(maxRam, Math.max(0, (stats[stats.length - 1]?.ram || (maxRam * 0.3)) + (Math.random() * 20 - 10))),
+                        netIn: Math.random() * 2,
+                        netOut: Math.random() * 5
+                    };
+                } else if (serverData.status === 'starting') {
+                    newStat = {
+                        time: timeRef.current,
+                        cpu: maxCpu * (0.6 + Math.random() * 0.4), // Heavy CPU on start
+                        ram: maxRam * (0.4 + Math.random() * 0.4), // Heavy RAM load on start
+                        netIn: Math.random() * 15,
+                        netOut: Math.random() * 25
+                    };
+                } else {
+                    // Stopping
+                    newStat = {
+                        time: timeRef.current,
+                        cpu: Math.max(0, (stats[stats.length - 1]?.cpu || 0) * 0.8), // Decaying CPU
+                        ram: Math.max(0, (stats[stats.length - 1]?.ram || 0) * 0.8), // Decaying RAM
+                        netIn: 0,
+                        netOut: 0
+                    };
+                }
+
+                serverService.pushServerStatTick(id, newStat);
+            }, 1000);
+        } else {
+            // When offline, clear the backend stats buffer to "reset" the graph for the next boot.
+            // Using a debounce/timeout here could be safer, but for simulation, we wipe stats when truly offline.
+            // (We will skip actually deleting the stats history here so the graph freezes nicely instead of drawing blank)
+        }
+
+        return () => {
+            if (simulatorRef.current) clearInterval(simulatorRef.current);
+        };
+    }, [id, serverData?.status, serverData?.specs]);
+
+
+    const handleStart = async () => {
+        if (!id || !serverData || serverData.status !== 'offline') return;
         toast.success('Starting server...');
-        setServerState('starting');
-        setLogs(["[10:24:15] [Server thread/INFO]: Starting minecraft server..."]);
+        await serverService.deleteServerStats(id); // Clean previous run's graphs
+        await serverService.updateServerStatus(id, 'starting');
+        await serverService.pushServerLog(id, "Server marked as STARTING by user.", 'INFO');
 
-        let step = 1;
-        const interval = setInterval(() => {
-            if (step < mockLogs.length) {
-                setLogs(prev => [...prev, mockLogs[step]]);
+        let step = 0;
+        if (startupSequenceRef.current) clearInterval(startupSequenceRef.current);
+
+        // Simulate Startup Sequence Logs
+        startupSequenceRef.current = setInterval(async () => {
+            if (step < STARTUP_SEQUENCE.length) {
+                await serverService.pushServerLog(id, STARTUP_SEQUENCE[step], 'INFO');
                 step++;
             } else {
-                clearInterval(interval);
-                setServerState('running');
-                toast.success('Server is online!', { icon: '🚀' });
+                if (startupSequenceRef.current) clearInterval(startupSequenceRef.current);
+                // Important: Verify it's STILL starting (wasn't killed mid-boot) before marking as running
+                serverService.subscribeToServer(id, async (freshData) => {
+                    if (freshData && freshData.status === 'starting') {
+                        await serverService.updateServerStatus(id, 'running');
+                        toast.success('Server is online!', { icon: '🚀' });
+                    }
+                })(); // immediately execute and unsub
             }
-        }, 600);
+        }, 800);
     };
 
-    const handleRestart = () => {
+    const handleGracefulStop = async () => {
+        if (!id || !serverData || serverData.status === 'offline' || serverData.status === 'stopping') return;
+        toast('Sending graceful stop command...', { icon: '🛑' });
+        await serverService.updateServerStatus(id, 'stopping');
+        await serverService.pushServerLog(id, "Server marked as STOPPING by user. Issuing SIGINT...", 'WARN');
+
+        setTimeout(async () => {
+            // If it hasn't been killed manually, mark as offline after 5 seconds
+            serverService.subscribeToServer(id, async (freshData) => {
+                if (freshData && freshData.status === 'stopping') {
+                    await serverService.updateServerStatus(id, 'offline');
+                    await serverService.pushServerLog(id, "Server shutdown successfully.", 'INFO');
+                    toast.success('Server offline');
+                }
+            })(); // immediately execute and unsub
+        }, 5000);
+    };
+
+    const handleRestart = async () => {
         toast('Restarting server...', { icon: '🔄' });
-        setServerState('stopping');
-        setIsShuttingDown(true);
-        setShutdownTime(3);
+        await handleGracefulStop();
+        // Wait for it to die, then start. 6 seconds covers the 5s stop timer.
         setTimeout(() => {
             handleStart();
-        }, 3500);
+        }, 6000);
     };
 
-    const handleGracefulStop = () => {
-        if (serverState === 'offline') return;
-        toast('Sending stop command...', { icon: '🛑' });
-        setIsShuttingDown(true);
-        setShutdownTime(5);
-    };
-
-    const handleKill = () => {
-        if (serverState === 'offline') return;
+    const handleKill = async () => {
+        if (!id || !serverData || serverData.status === 'offline') return;
         toast.error('Process killed ungracefully.');
-        setServerState('offline');
-        setLogs(prev => [...prev, "[10:24:25] [Server thread/ERROR]: Process killed by user."]);
-        setIsShuttingDown(false);
+
+        if (startupSequenceRef.current) clearInterval(startupSequenceRef.current);
+        await serverService.updateServerStatus(id, 'offline');
+        await serverService.pushServerLog(id, "PROCESS TERMINATED UNGRACEFULLY (SIGKILL 9).", 'ERROR');
+    };
+
+    const formatTimestamp = (ts: number) => {
+        const d = new Date(ts);
+        return `[${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}]`;
+    };
+
+    const submitCommand = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!consoleInput.trim() || !id || serverData?.status !== 'running') return;
+
+        await serverService.pushServerLog(id, `> ${consoleInput}`, 'INFO');
+        setConsoleInput('');
+
+        // Simulate some fake command responses
+        setTimeout(async () => {
+            await serverService.pushServerLog(id, `Unknown command or syntax error. Type "help" for a list.`, 'WARN');
+        }, 200);
     };
 
     const tabs = [
@@ -203,8 +301,17 @@ const ServerPanel = () => {
                 <div className="glass-panel p-4 rounded-3xl sticky top-24">
                     <div className="mb-6 px-2">
                         <Link to="/dashboard" className="text-xs text-textMuted hover:text-white transition-colors block mb-4">← Back to Servers</Link>
-                        <h1 className="text-xl font-bold text-white truncate" title={`Server ${id}`}>Survival SMP</h1>
-                        <p className="text-xs text-textMuted font-mono bg-surface inline-block px-2 py-1 rounded mt-1">{id}</p>
+                        {isLoading ? (
+                            <div className="animate-pulse space-y-2">
+                                <div className="h-6 bg-white/10 rounded w-3/4"></div>
+                                <div className="h-4 bg-white/5 rounded w-1/2"></div>
+                            </div>
+                        ) : (
+                            <>
+                                <h1 className="text-xl font-bold text-white truncate" title={serverData?.name}>{serverData?.name || 'Loading...'}</h1>
+                                <p className="text-xs text-textMuted font-mono bg-surface inline-block px-2 py-1 rounded mt-1">{id}</p>
+                            </>
+                        )}
                     </div>
                     <nav className="flex flex-col gap-1">
                         {tabs.map(tab => (
@@ -247,20 +354,20 @@ const ServerPanel = () => {
 
                         {/* Server Controls */}
                         <div className="glass-panel p-4 rounded-2xl flex flex-wrap gap-3">
-                            <button onClick={handleStart} disabled={serverState !== 'offline'} className="flex-1 min-w-[120px] bg-secondary hover:bg-emerald-400 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-secondary/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                            <button onClick={handleStart} disabled={isLoading || serverData?.status !== 'offline'} className="flex-1 min-w-[120px] bg-secondary hover:bg-emerald-400 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-secondary/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                                 <Play size={18} /> Start
                             </button>
-                            <button onClick={handleRestart} disabled={serverState === 'offline'} className="flex-1 min-w-[120px] bg-accent hover:bg-yellow-500 text-black font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-accent/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                            <button onClick={handleRestart} disabled={isLoading || serverData?.status === 'offline'} className="flex-1 min-w-[120px] bg-accent hover:bg-yellow-500 text-black font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-accent/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                                 <RotateCcw size={18} /> Restart
                             </button>
                             <button
                                 onClick={handleGracefulStop}
-                                disabled={serverState === 'offline' || isShuttingDown}
+                                disabled={isLoading || serverData?.status === 'offline' || serverData?.status === 'stopping'}
                                 className="flex-1 min-w-[120px] bg-surface border border-danger hover:bg-danger text-danger hover:text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50"
                             >
-                                {isShuttingDown ? `Stopping (${shutdownTime}s)` : <><Square size={18} /> Stop</>}
+                                {serverData?.status === 'stopping' ? `Stopping...` : <><Square size={18} /> Stop</>}
                             </button>
-                            <button onClick={handleKill} disabled={serverState === 'offline'} className="flex-1 min-w-[120px] bg-danger hover:bg-red-500 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-danger/20 transition-all font-mono disabled:opacity-50 disabled:cursor-not-allowed">
+                            <button onClick={handleKill} disabled={isLoading || serverData?.status === 'offline'} className="flex-1 min-w-[120px] bg-danger hover:bg-red-500 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-danger/20 transition-all font-mono disabled:opacity-50 disabled:cursor-not-allowed">
                                 <Skull size={18} /> Kill -9
                             </button>
                         </div>
@@ -270,26 +377,35 @@ const ServerPanel = () => {
                             <div className="bg-surface/80 px-4 py-2 border-b border-white/5 flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <div className="flex gap-1.5"><div className="w-3 h-3 rounded-full bg-danger" /><div className="w-3 h-3 rounded-full bg-accent" /><div className="w-3 h-3 rounded-full bg-secondary" /></div>
-                                    <span className="text-xs text-textMuted font-mono ml-2">pl1.hoxen.one - root@{id}</span>
+                                    <span className="text-xs text-textMuted font-mono ml-2">{serverData?.node || 'node1.hoxen.one'} - root@{id?.substring(0, 8)}</span>
                                 </div>
-                                {isShuttingDown && (
-                                    <span className="text-xs font-bold text-danger animate-pulse">Graceful Shutdown in Progress: {shutdownTime}s...</span>
+                                {serverData?.status === 'stopping' && (
+                                    <span className="text-xs font-bold text-danger animate-pulse">Graceful Shutdown in Progress...</span>
                                 )}
                             </div>
-                            <div className="flex-1 bg-[#0c0c0e] p-4 overflow-y-auto font-mono text-sm leading-relaxed scroll-smooth scrollbar-thin flex flex-col justify-end">
+                            <div className="flex-1 bg-[#0c0c0e] p-4 overflow-y-auto font-mono text-sm leading-relaxed scroll-smooth scrollbar-thin flex flex-col justify-start">
                                 <div>
                                     {logs.length === 0 && <div className="text-textMuted italic">Server is offline. Press Start to boot.</div>}
-                                    {logs.filter(log => typeof log === 'string').map((log, i) => (
+                                    {logs.map((log, i) => (
                                         <div key={i} className="text-gray-300">
-                                            <span className="text-blue-400">{log.substring(0, 10)}</span>
-                                            <span className={log.includes('INFO') ? 'text-green-400' : log.includes('ERROR') ? 'text-red-400' : 'text-gray-300'}>{log.substring(10, 31)}</span>
-                                            <span className="text-gray-100">{log.substring(31)}</span>
+                                            <span className="text-blue-400 mr-2">{formatTimestamp(log.timestamp)}</span>
+                                            <span className={log.type === 'INFO' ? 'text-green-400' : log.type === 'ERROR' ? 'text-red-400' : 'text-accent'}>{log.message}</span>
                                         </div>
                                     ))}
+                                    <div ref={logsEndRef} />
                                 </div>
                             </div>
                             <div className="bg-surface border-t border-white/5 p-2">
-                                <input type="text" placeholder="Type a command..." className="w-full bg-black/50 border border-white/10 rounded-lg py-2 px-3 outline-none focus:border-primary text-white font-mono text-sm" />
+                                <form onSubmit={submitCommand}>
+                                    <input
+                                        type="text"
+                                        value={consoleInput}
+                                        onChange={(e) => setConsoleInput(e.target.value)}
+                                        placeholder={serverData?.status === 'running' ? "Type a command..." : "Server must be running to execute commands"}
+                                        disabled={serverData?.status !== 'running'}
+                                        className="w-full bg-black/50 border border-white/10 rounded-lg py-2 px-3 outline-none focus:border-primary text-white font-mono text-sm disabled:opacity-50"
+                                    />
+                                </form>
                             </div>
                         </div>
 
@@ -299,9 +415,9 @@ const ServerPanel = () => {
                                 <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                                 <div className="flex items-center justify-between mb-2">
                                     <div className="flex items-center gap-2 text-white font-semibold"><Cpu size={16} className="text-primary" /> CPU Usage</div>
-                                    <span className="font-mono text-sm font-bold text-primary">{stats[19].cpu.toFixed(1)}%</span>
+                                    <span className="font-mono text-sm font-bold text-primary">{stats[19]?.cpu.toFixed(1) || 0}%</span>
                                 </div>
-                                <div className="text-xs text-textMuted mb-2">0% / 200% (2 Cores)</div>
+                                <div className="text-xs text-textMuted mb-2">0% / {serverData?.specs?.cpu ? serverData.specs.cpu * 100 : '--'}% ({serverData?.specs?.cpu || '--'} Cores)</div>
                                 <div className="h-24">
                                     <ResponsiveContainer width="100%" height="100%">
                                         <AreaChart data={stats}>
@@ -314,9 +430,9 @@ const ServerPanel = () => {
                                 <div className="absolute inset-0 bg-accent/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                                 <div className="flex items-center justify-between mb-2">
                                     <div className="flex items-center gap-2 text-white font-semibold"><MemoryStick size={16} className="text-accent" /> Memory Usage</div>
-                                    <span className="font-mono text-sm font-bold text-accent">{stats[19].ram.toFixed(0)} MB</span>
+                                    <span className="font-mono text-sm font-bold text-accent">{stats[19]?.ram.toFixed(0) || 0} MB</span>
                                 </div>
-                                <div className="text-xs text-textMuted mb-2">0 MB / 4096 MB</div>
+                                <div className="text-xs text-textMuted mb-2">0 MB / {serverData?.specs?.ram ? serverData.specs.ram * 1024 : '--'} MB</div>
                                 <div className="h-24">
                                     <ResponsiveContainer width="100%" height="100%">
                                         <AreaChart data={stats}>
@@ -330,7 +446,7 @@ const ServerPanel = () => {
                                 <div className="flex items-center justify-between mb-2">
                                     <div className="flex items-center gap-2 text-white font-semibold"><Activity size={16} className="text-secondary" /> Network (In/Out)</div>
                                     <div className="font-mono text-sm font-bold flex gap-2">
-                                        <span className="text-secondary">{(stats[19].netIn + stats[19].netOut).toFixed(1)} MB/s</span>
+                                        <span className="text-secondary">{((stats[19]?.netIn || 0) + (stats[19]?.netOut || 0)).toFixed(1)} MB/s</span>
                                     </div>
                                 </div>
                                 <div className="text-xs text-textMuted flex gap-3 mb-2">
@@ -362,14 +478,14 @@ const ServerPanel = () => {
                                         <div className="space-y-4">
                                             <div className="bg-surface p-4 rounded-xl border border-white/5">
                                                 <p className="text-xs text-textMuted uppercase tracking-wider font-semibold mb-1">Server Address</p>
-                                                <div className="font-mono text-white select-all text-sm">sftp://pl1.hoxen.one:2022</div>
+                                                <div className="font-mono text-white select-all text-sm">sftp://{serverData?.node || 'pl1.hoxen.one'}:{serverData?.settings?.sftpPort || 2022}</div>
                                             </div>
                                             <div className="bg-surface p-4 rounded-xl border border-white/5">
                                                 <p className="text-xs text-textMuted uppercase tracking-wider font-semibold mb-1">Username</p>
-                                                <div className="font-mono text-white select-all text-sm">xylos.{id}</div>
+                                                <div className="font-mono text-white select-all text-sm">{user?.email?.split('@')[0] || 'admin'}.{id?.substring(0, 8)}</div>
                                             </div>
                                             <p className="text-sm text-textMuted">Your SFTP password is the same as the password you use to access this panel.</p>
-                                            <button className="bg-primary hover:bg-primaryHover text-white px-6 py-2.5 rounded-xl font-medium transition-colors shadow-lg shadow-primary/20 w-full md:w-auto">Launch SFTP</button>
+                                            <button onClick={() => toast("SFTP connection attempted", { icon: "🔌" })} className="bg-primary hover:bg-primary-hover text-white px-6 py-2.5 rounded-xl font-medium transition-colors shadow-lg shadow-primary/20 w-full md:w-auto">Launch SFTP</button>
                                         </div>
                                     </div>
 
@@ -379,8 +495,24 @@ const ServerPanel = () => {
                                             <div className="bg-surface p-4 rounded-xl border border-white/5">
                                                 <p className="text-xs text-textMuted uppercase tracking-wider font-semibold mb-2">Server Name</p>
                                                 <div className="flex gap-2">
-                                                    <input type="text" defaultValue="Survival SMP" className="w-full bg-black/30 border border-white/10 rounded-lg py-2 px-3 outline-none focus:border-primary text-white text-sm" />
-                                                    <button className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm whitespace-nowrap">Save</button>
+                                                    <input
+                                                        type="text"
+                                                        value={serverNameInput}
+                                                        onChange={(e) => setServerNameInput(e.target.value)}
+                                                        className="w-full bg-black/30 border border-white/10 rounded-lg py-2 px-3 outline-none focus:border-primary text-white text-sm"
+                                                    />
+                                                    <button
+                                                        onClick={async () => {
+                                                            if (!id || !serverNameInput.trim()) return;
+                                                            await serverService.updateServerName(id, serverNameInput.trim());
+                                                            await serverService.pushServerLog(id, `Server rename: ${serverNameInput}`, 'INFO');
+                                                            toast.success("Server renamed successfully.");
+                                                        }}
+                                                        disabled={serverNameInput === serverData?.name || !serverNameInput.trim()}
+                                                        className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm whitespace-nowrap disabled:opacity-50"
+                                                    >
+                                                        Save
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
@@ -393,11 +525,11 @@ const ServerPanel = () => {
                                         <div className="space-y-4">
                                             <div className="bg-surface p-4 rounded-xl border border-white/5">
                                                 <p className="text-xs text-textMuted uppercase tracking-wider font-semibold mb-1">Node</p>
-                                                <p className="text-white font-medium text-sm">pl1.hoxen.one</p>
+                                                <p className="text-white font-medium text-sm">{serverData?.node || 'pl1.hoxen.one'}</p>
                                             </div>
                                             <div className="bg-surface p-4 rounded-xl border border-white/5 flex flex-col">
-                                                <p className="text-xs text-textMuted uppercase tracking-wider font-semibold mb-1">Server ID</p>
-                                                <p className="text-white font-mono text-xs overflow-hidden text-ellipsis select-all">{id}-24a0-40db-a9c8-6da68529d679</p>
+                                                <p className="text-xs text-textMuted uppercase tracking-wider font-semibold mb-1">Server ID / UUID</p>
+                                                <p className="text-white font-mono text-xs overflow-hidden text-ellipsis select-all">{id}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -407,7 +539,18 @@ const ServerPanel = () => {
                                         <div className="bg-danger/10 p-6 rounded-xl border border-danger/20">
                                             <h4 className="font-bold text-danger mb-2">Reinstall Server</h4>
                                             <p className="text-sm text-red-100/70 mb-4">Reinstalling your server will stop it, and then re-run the installation script that initially set it up. <strong className="text-white">Some files may be deleted or modified during this process, please back up your data before continuing.</strong></p>
-                                            <button className="bg-danger hover:bg-red-500 text-white font-bold py-2.5 px-6 rounded-xl transition-colors shadow-lg shadow-danger/20">Reinstall Server</button>
+                                            <button
+                                                onClick={() => {
+                                                    if (window.confirm("Are you SURE you want to reinstall? This might delete data.")) {
+                                                        toast.success("Reinstallation sequence initiated...");
+                                                        serverService.updateServerStatus(id!, 'stopping');
+                                                        serverService.pushServerLog(id!, "System Reinstall Command Issued.", 'WARN');
+                                                    }
+                                                }}
+                                                className="bg-danger hover:bg-red-500 text-white font-bold py-2.5 px-6 rounded-xl transition-colors shadow-lg shadow-danger/20"
+                                            >
+                                                Reinstall Server
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -536,15 +679,25 @@ const ServerPanel = () => {
                                                 Cancel
                                             </button>
                                             <button
-                                                onClick={() => {
+                                                onClick={async () => {
                                                     toast.success(`Installing ${selectedSoftware} ${selectedVersion} sequence initiated. Restarting server...`);
-                                                    setServerState('stopping');
-                                                    setTimeout(() => {
-                                                        setServerState('offline');
+
+                                                    if (id) {
+                                                        await serverService.pushServerLog(id, `Started installation of ${selectedSoftware} ${selectedVersion} ${wipeServer ? '(with Server Wipe)' : ''}`, 'WARN');
+                                                        await serverService.updateServerStatus(id, 'stopping');
+                                                    }
+
+                                                    setTimeout(async () => {
+                                                        if (id) {
+                                                            await serverService.updateServerStatus(id, 'offline');
+                                                            // Provide a brief pause before returning to console
+                                                        }
                                                         setSelectedVersion(null);
+                                                        setWipeServer(false);
+                                                        setActiveTab('console'); // Go back to console to watch it boot
                                                     }, 2000);
                                                 }}
-                                                className="flex-[2] bg-primary hover:bg-primaryHover text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/30 transition-all text-lg flex justify-center items-center gap-2">
+                                                className="flex-[2] bg-primary hover:bg-primary-hover text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/30 transition-all text-lg flex justify-center items-center gap-2">
                                                 <Download size={20} />
                                                 Start Installation
                                             </button>
@@ -566,7 +719,7 @@ const ServerPanel = () => {
                             <div className="flex gap-2 w-full md:w-auto">
                                 <button className="flex-1 md:flex-none justify-center bg-surface hover:bg-white/10 border border-white/10 text-white font-medium py-2 px-4 rounded-xl transition-all text-sm">New File</button>
                                 <button className="flex-1 md:flex-none justify-center bg-surface hover:bg-white/10 border border-white/10 text-white font-medium py-2 px-4 rounded-xl transition-all text-sm">New Folder</button>
-                                <button className="flex-1 md:flex-none justify-center bg-primary hover:bg-primaryHover text-white font-medium py-2 px-4 rounded-xl transition-all text-sm shadow-lg shadow-primary/20">Upload</button>
+                                <button className="flex-1 md:flex-none justify-center bg-primary hover:bg-primary-hover text-white font-medium py-2 px-4 rounded-xl transition-all text-sm shadow-lg shadow-primary/20">Upload</button>
                             </div>
                         </div>
                         <div className="overflow-x-auto">
@@ -615,12 +768,12 @@ const ServerPanel = () => {
                                     setDatabases(prev => [...prev, { name: dbName, host: 'db2.hoxen.one', username: `u${Math.floor(Math.random() * 1000)}_db`, size: '0 MB' }]);
                                     toast.success('Database created');
                                 }
-                            }} className="flex items-center gap-2 bg-primary hover:bg-primaryHover text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-lg shadow-primary/20">
+                            }} className="flex items-center gap-2 bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-lg shadow-primary/20">
                                 <Plus size={16} /> New Database
                             </button>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {databases.map((db, i) => (
+                            {databases?.map((db, i) => (
                                 <div key={i} className="bg-surface border border-white/5 p-6 rounded-2xl relative group hover:border-white/20 transition-all">
                                     <div className="flex justify-between items-start mb-4">
                                         <div className="flex items-center gap-3">
@@ -664,12 +817,12 @@ const ServerPanel = () => {
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-panel p-6 rounded-3xl">
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-2xl font-bold text-white">Schedules & Cron</h2>
-                            <button onClick={() => toast('Schedule creation modal opened', { icon: '📝' })} className="flex items-center gap-2 bg-primary hover:bg-primaryHover text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-lg shadow-primary/20">
+                            <button onClick={() => toast('Schedule creation modal opened', { icon: '📝' })} className="flex items-center gap-2 bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-lg shadow-primary/20">
                                 <Plus size={16} /> Create Schedule
                             </button>
                         </div>
                         <div className="space-y-3">
-                            {schedules.map((s, i) => (
+                            {schedules?.map((s, i) => (
                                 <div key={i} className="flex flex-col md:flex-row items-start md:items-center justify-between p-5 bg-surface border border-white/5 hover:border-primary/30 rounded-2xl transition-all group">
                                     <div className="flex items-center gap-4 mb-4 md:mb-0">
                                         <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
@@ -703,12 +856,12 @@ const ServerPanel = () => {
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-panel p-6 rounded-3xl">
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-2xl font-bold text-white">Subusers</h2>
-                            <button onClick={() => toast.success('Invite link copied to clipboard!')} className="flex items-center gap-2 bg-primary hover:bg-primaryHover text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-lg shadow-primary/20">
+                            <button onClick={() => toast.success('Invite link copied to clipboard!')} className="flex items-center gap-2 bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-lg shadow-primary/20">
                                 <Plus size={16} /> Invite User
                             </button>
                         </div>
                         <div className="space-y-3">
-                            {users.map((u, i) => (
+                            {users?.map((u, i) => (
                                 <div key={i} className="flex flex-col md:flex-row items-start md:items-center justify-between p-5 bg-surface border border-white/5 rounded-2xl transition-all group">
                                     <div className="flex items-center gap-4 mb-4 md:mb-0">
                                         <div className="hidden md:flex w-12 h-12 rounded-full bg-white/5 items-center justify-center text-textMuted border border-white/10">
@@ -720,7 +873,7 @@ const ServerPanel = () => {
                                                 {u['2fa'] && <span className="text-[10px] bg-secondary/10 text-secondary border border-secondary/20 px-2 py-0.5 rounded-full uppercase tracking-widest font-bold flex items-center gap-1"><ShieldAlert size={10} /> 2FA setup</span>}
                                             </h3>
                                             <div className="flex gap-2">
-                                                {u.perms.map(p => <span key={p} className="text-xs font-mono text-textMuted bg-black/40 border border-white/10 px-2 py-0.5 rounded">{p}</span>)}
+                                                {u.perms?.map((p: string) => <span key={p} className="text-xs font-mono text-textMuted bg-black/40 border border-white/10 px-2 py-0.5 rounded">{p}</span>)}
                                             </div>
                                         </div>
                                     </div>
@@ -744,12 +897,12 @@ const ServerPanel = () => {
                                 <h2 className="text-2xl font-bold text-white mb-1">Backups</h2>
                                 <p className="text-sm text-textMuted">Limit: <span className="text-white font-medium">1 / 3</span> backups</p>
                             </div>
-                            <button className="flex items-center gap-2 bg-primary hover:bg-primaryHover text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-lg shadow-primary/20">
+                            <button className="flex items-center gap-2 bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-lg shadow-primary/20">
                                 <Archive size={16} /> Create Backup
                             </button>
                         </div>
                         <div className="space-y-3">
-                            {backups.map((b, i) => (
+                            {backups?.map((b, i) => (
                                 <div key={i} className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 bg-surface border border-white/5 hover:border-white/20 rounded-2xl transition-all group">
                                     <div className="flex items-center gap-4 mb-4 md:mb-0">
                                         <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent border border-accent/20">
@@ -797,7 +950,7 @@ const ServerPanel = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {allocations.map((a, i) => (
+                                    {allocations?.map((a, i) => (
                                         <tr key={i} className={`border-b border-white/5 hover:bg-white/[0.02] transition-colors group ${a.isDefault ? 'bg-primary/5' : ''}`}>
                                             <td className="p-4 font-mono text-sm text-white">
                                                 {a.ip}
